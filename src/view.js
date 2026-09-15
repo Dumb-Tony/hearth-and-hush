@@ -61,6 +61,7 @@ function welcome() {
     `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Keep your own counsel</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
     "welcome",
   );
+  $("coat").value = state.player.color;
 }
 function startGame() {
   state.player.name = $("keeperName").value.trim() || "Keeper";
@@ -89,10 +90,12 @@ function talk(id) {
         ? "There has been a complaint about the tollhouse. Will you cooperate, or keep your confidence?"
         : n.id === "cedric" && q?.resolved
           ? q.outcome === "proof"
-            ? "Bram made us stop before the bridge. We found something you should see."
+            ? q.bram
+              ? "Bram made us stop before the bridge. We found something you should see."
+              : "Your warning kept me off the bridge. I found something you should see."
             : q.outcome === "compromised"
               ? "The warehouse was stripped. The Reed Knives knew where to look. Who told them?"
-              : "The bridge gave way. I am back. I do not especially want to talk about the rest."
+              : q.returnLine || "I am back. Ask me about the journey."
           : n.id === "bram" && n.familiar >= 2
             ? "The north bridge is rotten. Take rope and use the ridge. Come home before you get brave."
             : n.id === "tomas" && n.familiar >= 2
@@ -113,7 +116,7 @@ function board() {
     letter = state.evidence.find((e) => e.id === "letter");
   if (letter) doAct("inspect", "letter");
   panel(
-    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "A pin, a map of Rookcross, and a space where the rest of the world ought to be."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.resolved ? "The party is back in town. Find Cedric when he comes in." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
+    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "A pin, a map of Rookcross, and a space where the rest of the world ought to be."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.returnSeen || q.debriefed ? "You have seen Cedric back at the inn. Find him for the full story." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
 <div class="actions">${btn("Read journal", "journal()")}${btn("Back to the room", "closePanel()")}</div>`,
     "board",
   );
@@ -154,10 +157,10 @@ function filterJournal(filter) {
       .filter((n) => n.text.toLowerCase().includes(f))
       .map((n) => `<p class="muted">Day ${n.day} — ${esc(n.text)}</p>`)
       .join("") +
-    Object.entries(state.relationships)
+    Object.entries(state.observedRelationships)
       .filter(
         ([k, v]) =>
-          (k + v).includes(f) &&
+          (k + v).toLowerCase().includes(f) &&
           k.split(":").every((id) => Sim.npc(state, id).familiar > 0),
       )
       .map(
@@ -490,6 +493,7 @@ function draw() {
   ].sort((a, b) => a.y - b.y))
     person(n, n.isPlayer);
   let best = null;
+  const attending = Sim.attendedTalk(state);
   for (let t of Sim.activeTalks(state)) {
     let p = Sim.perceive(state, t),
       n = Sim.npc(state, t.a),
@@ -506,7 +510,7 @@ function draw() {
     if (p.tier === 2) bubble(t.fragment, n.x, n.y - 45);
     if (p.tier === 3) {
       text(t.whisper ? "…" : "···", n.x, n.y - 46, 20, "#ead6a5");
-      if (!best || h?.dwell > best.dwell) best = { t, dwell: h?.dwell || 0 };
+      if (t.id === attending?.id) best = { t, dwell: h?.dwell || 0 };
     }
   }
   $("caption").style.display = best ? "block" : "none";
@@ -597,4 +601,3 @@ function frame(t) {
 }
 welcome();
 requestAnimationFrame(frame);
-

@@ -20,7 +20,7 @@ The game autosaves locally in your browser. Settings → New week resets that sa
 - Sources, secondhand testimony, independent corroboration, known recipients, physical evidence and uncertain rumors.
 - Share, sell, withhold, investigate and exploit through physical conversations/board interactions. Mira can pass your confidence onward, changing the expedition outcome.
 - Tactile service, favorites, cleaning a magical spill, checking a room, forgiving economy, hiring Nell, physical automatic service and limited staff reports.
-- Party composition, provisions, instructions and a warning; visible departure, two-day absence and returning proof, compromised evidence or injury.
+- Party composition, provisions, instructions and a warning; visible departure, two-day absence and returning proof, compromised evidence, safe retreat or injury. Cautious parties honor the instruction to turn back. Bram retains his own road knowledge, and a supplied solo Cedric can follow your learned warning.
 - A guard inquiry resolved through cooperation, silence or ledger testimony; a small optional inn-history clue.
 - Seven-day conclusion, pause, local saving, restart, accessibility options and optional ambience. No external assets or runtime network dependency.
 
@@ -43,3 +43,7 @@ Node 24; no dependencies. `npm test` runs scenario regressions. `npm run build` 
 The later Unity version should reimplement stable-ID data and state rules in C#, with richer scene presentation; it should not mechanically port canvas drawing.
 
 All characters and scenario details introduced in this build are provisional. The original creative constitution governs future development.
+
+## September 15 refinement
+
+Nearby overlapping speech now teaches only the conversation actually displayed. Nell needs sustained close hearing and respects whispered volume. The journal records witnessed relationship developments, and the board no longer announces an unseen return. Confirmed evidence stays confirmed when later hearsay arrives. Existing saves migrate without losing the week, and the chosen coat survives reopening.

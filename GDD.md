@@ -99,3 +99,9 @@ Playtest questions: which regular do you remember and why; did you move to liste
 
 ## 15. Scope truth
 This document specifies the full product direction and bounded implementation plan. The delivered README and test report must enumerate actual implementation and deferrals. A seven-day prototype cannot establish long-term attachment, kingdom simulation, romance, construction or commercial readiness. Publishing requires a functioning external account/session; if blocked, report the exact blocker and deliver the local playable artifact without claiming a public release.
+
+## 16. Validated refinement, September 15
+
+Expedition instructions have causal meaning: a cautious party without a usable route or supplies turns back safely. Bram carries his own route knowledge; including him does not require the keeper to repeat his advice. A supplied, warned, cautious Cedric can survey alone. Reckless instructions can still cause injury, with an account that distinguishes bridge failure from a rushed ridge crossing. These changes replace the initial all-checkboxes-required resolution rule.
+
+Only the nearest fully audible conversation accumulates the keeper's listening time, matching the displayed caption. Staff need sustained close hearing and respect whispers. Relationship notes are snapshots of developments actually heard or debriefed, rather than a live view of hidden simulation state. An expedition return appears on the board only after the keeper sees Cedric or hears his debrief. This preserves both anticipation and uncertainty without adding an attention meter.

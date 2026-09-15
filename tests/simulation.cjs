@@ -349,4 +349,155 @@ test("every authored conversation has a physically realizable meeting", () => {
   }
   for (const t of DATA.talks) assert(seen.has(t.id), t.id);
 });
+test("cautious underprepared parties turn back alive and follow instructions", () => {
+  const s = prep({
+    bram: false,
+    supplies: false,
+    warning: false,
+    cautious: true,
+  });
+  Sim.nextDay(s);
+  Sim.nextDay(s);
+  advance(s, 30);
+  place(s, "cedric");
+  Sim.act(s, "debrief", "cedric");
+  assert.equal(s.quest.outcome, "turnedBack");
+  assert(s.quest.returnLine.includes("turned back"));
+  assert(s.knowledge.warning);
+  assert(!s.knowledge.ledger);
+});
+test("Bram retains his own road knowledge without the keeper repeating it", () => {
+  const s = prep({
+    bram: true,
+    supplies: true,
+    warning: false,
+    cautious: true,
+  });
+  Sim.nextDay(s);
+  Sim.nextDay(s);
+  advance(s, 30);
+  assert.equal(s.quest.outcome, "proof");
+});
+test("a supplied solo novice can follow a learned safe route", () => {
+  const s = prep({
+    bram: false,
+    supplies: true,
+    warning: true,
+    cautious: true,
+  });
+  Sim.nextDay(s);
+  Sim.nextDay(s);
+  advance(s, 30);
+  place(s, "cedric");
+  Sim.act(s, "debrief", "cedric");
+  assert.equal(s.quest.outcome, "proof");
+  assert(s.knowledge.ledger);
+  assert(s.quest.returnLine.includes("Your warning"));
+});
+test("an unseen return does not reveal relationship changes", () => {
+  const s = prep({ bram: true, supplies: true, warning: true, cautious: true });
+  Sim.nextDay(s);
+  Sim.nextDay(s);
+  s.player.x = 90;
+  s.player.y = 100;
+  advance(s, 30);
+  assert(s.quest.resolved);
+  assert(!s.quest.returnSeen);
+  assert(!s.observedRelationships["cedric:bram"]);
+  place(s, "cedric");
+  Sim.act(s, "debrief", "cedric");
+  assert(s.quest.returnSeen);
+  assert(s.observedRelationships["cedric:bram"]);
+});
+test("later hearsay cannot downgrade confirmed physical evidence", () => {
+  const s = Sim.fresh();
+  Sim.learn(s, "ledger", "Ledger", "physical evidence", true);
+  Sim.learn(s, "ledger", "Oren", "heard");
+  assert.equal(s.knowledge.ledger.status, "Confirmed evidence");
+});
+test("overlapping speech only teaches the conversation actually attended", () => {
+  const s = Sim.fresh();
+  s.time = 10;
+  for (const [id, x, y] of [
+    ["bram", 350, 510],
+    ["cedric", 415, 510],
+    ["aldous", 430, 510],
+    ["nell", 495, 510],
+  ]) {
+    const n = Sim.npc(s, id);
+    n.present = true;
+    n.x = x;
+    n.y = y;
+    n.goal = null;
+  }
+  s.player.x = 350;
+  s.player.y = 480;
+  DATA.talks.push(
+    {
+      id: "test-a",
+      days: [1],
+      start: 0,
+      end: 20,
+      a: "bram",
+      b: "cedric",
+      rumor: "warning",
+    },
+    {
+      id: "test-b",
+      days: [1],
+      start: 0,
+      end: 20,
+      a: "aldous",
+      b: "nell",
+      rumor: "diversion",
+    },
+  );
+  try {
+    advance(s, 4);
+    assert(s.knowledge.warning);
+    assert(!s.knowledge.diversion);
+  } finally {
+    DATA.talks.splice(-2);
+  }
+});
+test("Nell cannot instantly collect whispers outside close hearing", () => {
+  const s = Sim.fresh();
+  s.staff.hired = true;
+  s.time = 15;
+  const def = DATA.npcs.find((n) => n.id === "bram"),
+    oldY = def.y;
+  def.y = 265;
+  for (const n of s.npcs) {
+    n.present = true;
+    n.served = 1;
+  }
+  Object.assign(Sim.npc(s, "nell"), { x: 245, y: 265 });
+  Object.assign(Sim.npc(s, "bram"), { x: 350, y: 265 });
+  Object.assign(Sim.npc(s, "cedric"), { x: 415, y: 265 });
+  DATA.talks.push({
+    id: "test-whisper",
+    days: [1],
+    start: 0,
+    end: 21,
+    a: "bram",
+    b: "cedric",
+    whisper: true,
+    rumor: "knives",
+  });
+  try {
+    advance(s, 4);
+    assert(!s.staff.reports.some((r) => r.id === "knives"));
+  } finally {
+    DATA.talks.pop();
+    def.y = oldY;
+  }
+});
+test("existing v1 saves migrate without resetting the player's week", () => {
+  const old = Sim.fresh();
+  old.day = 4;
+  delete old.observedRelationships;
+  const restored = Sim.restore(JSON.stringify(old));
+  assert.equal(restored.day, 4);
+  assert.equal(Object.keys(restored.observedRelationships).length, 0);
+});
 console.log("\n" + count + " scenario regressions passed.");

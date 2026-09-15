@@ -117,6 +117,7 @@ const Sim = (() => {
         "cedric:bram": "apprentice and mentor",
         "cedric:nell": "tentative fondness",
       },
+      observedRelationships: {},
       world: {
         trade: "Wagons avoid Rookcross",
         leak: false,
@@ -162,7 +163,10 @@ const Sim = (() => {
         channel,
         day: s.day,
       });
-      if (new Set(k.observations.map((o) => o.origin || o.source)).size > 1)
+      if (
+        k.status !== "Confirmed evidence" &&
+        new Set(k.observations.map((o) => o.origin || o.source)).size > 1
+      )
         k.status = "Corroborated";
     }
     if (confirmed) k.status = "Confirmed evidence";
@@ -199,6 +203,16 @@ const Sim = (() => {
     if (d < near + 70) return { tier: 2 };
     if (d < 340) return { tier: 1 };
     return { tier: 0 };
+  }
+  function attendedTalk(s) {
+    return activeTalks(s)
+      .filter((t) => perceive(s, t).tier === 3)
+      .sort(
+        (a, b) => dist(s.player, npc(s, a.a)) - dist(s.player, npc(s, b.a)),
+      )[0];
+  }
+  function rememberRelationship(s, key) {
+    s.observedRelationships[key] = s.relationships[key];
   }
   function move(n, dt, speed = 65) {
     if (!n.path?.length) return;
@@ -255,8 +269,31 @@ const Sim = (() => {
     let q = s.quest;
     if (!q || q.resolved || s.day < q.returnDay) return;
     q.resolved = true;
-    const safe = q.bram && q.supplies && q.warning && q.cautious;
-    q.outcome = safe ? (s.world.leak ? "compromised" : "proof") : "injured";
+    // A companion retains their own knowledge. Cautious instructions really do
+    // authorize turning back; missing one checkbox must not guarantee injury.
+    const knowsRoute = q.warning || q.bram;
+    const safe = knowsRoute && q.supplies && q.cautious;
+    q.outcome = safe
+      ? s.world.leak
+        ? "compromised"
+        : "proof"
+      : q.cautious
+        ? "turnedBack"
+        : "injured";
+    q.returnLine =
+      q.outcome === "turnedBack"
+        ? knowsRoute
+          ? "We reached the ridge, but had no rope for the crossing. You said come home before taking risks. So we did."
+          : "The north bridge is rotten. You said come home before taking risks. We turned back."
+        : q.outcome === "injured"
+          ? knowsRoute
+            ? "We rushed the ridge crossing. I fell. Next time, let us stop before someone gets hurt."
+            : "The bridge gave way. We had to turn back. I thought you knew the road."
+          : q.outcome === "proof"
+            ? q.bram
+              ? "We came home. With proof. Bram even let me carry the ledger."
+              : "Your warning kept me off the bridge. I followed the ridge, and brought the ledger home."
+            : "The Reed Knives got there first. Mira knew where we were going. How?";
     for (let id of q.party) {
       let n = npc(s, id);
       n.away = false;
@@ -265,12 +302,16 @@ const Sim = (() => {
       n.memory.push(
         q.outcome === "injured"
           ? "You sent us onto a broken road without enough preparation."
-          : "You made sure we had a way home.",
+          : q.outcome === "turnedBack"
+            ? "You gave us permission to turn back safely."
+            : "You made sure we had a way home.",
       );
     }
     s.relationships["cedric:bram"] = q.bram
       ? "Bram brought Cedric home"
-      : "Cedric wishes Bram had come";
+      : q.outcome === "injured"
+        ? "Cedric wishes Bram had come"
+        : "Cedric followed Bram's road advice";
     if (q.outcome === "injured")
       s.relationships["cedric:mira"] = s.world.leak
         ? "Cedric feels betrayed"
@@ -364,23 +405,43 @@ const Sim = (() => {
       move(n, dt);
       n.state = n.path.length ? "walking" : n.served ? "drinking" : "seated";
     }
+    if (s.quest?.resolved && !s.quest.returnSeen) {
+      const returned = npc(s, "cedric");
+      if (
+        returned.present &&
+        dist(s.player, returned) < 340 &&
+        line(s.player, returned)
+      )
+        s.quest.returnSeen = true;
+    }
+    const attending = attendedTalk(s);
+    s.staff.listening ||= {};
     for (let t of activeTalks(s)) {
       let p = perceive(s, t),
         h = s.heard[t.id] || (s.heard[t.id] = { dwell: 0, learned: false });
-      if (p.tier === 3) {
+      if (p.tier === 3 && t.id === attending?.id) {
         h.dwell += dt;
         if (h.dwell >= 3 && !h.learned) {
           h.learned = true;
           if (t.rumor) learn(s, t.rumor, npc(s, t.a).name, "overheard");
+          const relationship = [t.a, t.b].sort().join(":");
+          const key = Object.keys(s.relationships).find(
+            (k) => k.split(":").sort().join(":") === relationship,
+          );
+          if (key) rememberRelationship(s, key);
         }
       } else h.dwell = Math.max(0, h.dwell - dt * 0.5);
       let nell = npc(s, "nell");
+      const staffNear =
+        s.staff.hired && nell.present && perceive(s, t, nell).tier === 3;
+      s.staff.listening[t.id] = staffNear
+        ? (s.staff.listening[t.id] || 0) + dt
+        : 0;
       if (
         s.staff.hired &&
         t.rumor &&
         nell.present &&
-        dist(nell, npc(s, t.a)) < 160 &&
-        line(nell, npc(s, t.a)) &&
+        s.staff.listening[t.id] >= 3 &&
         !s.staff.reports.some((r) => r.id === t.rumor)
       )
         s.staff.reports.push({ id: t.rumor, source: npc(s, t.a).name });
@@ -643,6 +704,7 @@ const Sim = (() => {
       if (id !== "cedric" || !s.quest?.resolved || s.quest.debriefed)
         return false;
       s.quest.debriefed = true;
+      s.quest.returnSeen = true;
       let o = s.quest.outcome;
       if (o === "proof") {
         learn(
@@ -655,7 +717,7 @@ const Sim = (() => {
         s.coins += 12;
         say(
           s,
-          "Cedric: We came home. With proof. Bram even let me carry the ledger.",
+          "Cedric: " + (s.quest.returnLine || "We came home with the ledger."),
         );
         s.world.trade = "Proof of the detour has reached the inn";
       } else if (o === "compromised") {
@@ -671,17 +733,27 @@ const Sim = (() => {
           s,
           "The tollhouse was stripped before your party arrived. Cedric is asking who told Mira.",
         );
+      } else if (o === "turnedBack") {
+        learn(s, "warning", "Cedric at the crossing", "eyewitness");
+        say(s, "Cedric: " + s.quest.returnLine);
+        note(
+          s,
+          "Cedric returned safely without evidence. The party followed your instruction to turn back before taking risks.",
+        );
       } else {
         learn(s, "diversion", "Injured Cedric", "eyewitness");
         say(
           s,
-          "Cedric: The bridge gave way. We had to turn back. I thought you knew the road.",
+          "Cedric: " +
+            (s.quest.returnLine || "The bridge gave way. We had to turn back."),
         );
         note(
           s,
           "Cedric returned injured. Preparation would have changed this journey.",
         );
       }
+      rememberRelationship(s, "cedric:bram");
+      rememberRelationship(s, "cedric:mira");
       return true;
     }
     if (verb === "cooperate") {
@@ -720,9 +792,11 @@ const Sim = (() => {
           ? "Cedric returned with proof and a story he can tell his sister."
           : s.quest.outcome === "compromised"
             ? "Your party came home to a secret already spent. Cedric and Mira have things to say."
-            : s.quest.outcome === "injured"
-              ? "Cedric came home hurt. Next time, preparation matters."
-              : "An expedition is still on the road."
+            : s.quest.outcome === "turnedBack"
+              ? "Cedric returned safely without proof. He trusted your instruction to turn back."
+              : s.quest.outcome === "injured"
+                ? "Cedric came home hurt. Next time, preparation matters."
+                : "An expedition is still on the road."
         : "No expedition left your door this week.",
       s.world.leak
         ? "Mira passed your confidence to the Reed Knives. Information kept moving after you let it go."
@@ -751,6 +825,8 @@ const Sim = (() => {
       )
         return fresh();
       const base = fresh();
+      // Old saves retain their progress; do not infer unseen relationships.
+      s.observedRelationships ||= {};
       if (Object.keys(base).some((key) => !(key in s))) return fresh();
       if (
         !Array.isArray(s.npcs) ||
@@ -831,6 +907,7 @@ const Sim = (() => {
     npc,
     activeTalks,
     perceive,
+    attendedTalk,
     nearNpc,
     nearStation,
     nextDay,

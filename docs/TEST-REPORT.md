@@ -2,7 +2,7 @@
 
 ## Automated checks
 
-26 scenario regressions pass under Node 24.19.0 using the same simulation bundled into the playable HTML. These include:
+34 scenario regressions pass under Node 24.19.0 using the same simulation bundled into the playable HTML. These include:
 
 - Complete routes from four room origins to every interaction station; keyboard collision sweeps and a continuous click-route input replay to every station.
 - Distant quiet speech stays unknown; close lingering learns a sourced warning; partitions block both perception and interaction, including with clearer cues enabled.
@@ -55,4 +55,10 @@ The public GitHub Pages URL was opened in the browser and the onboarding and pla
 ## Remaining limits
 
 See README for explicit feature deferrals. Most importantly, authored schedules are a bounded prototype of independent lives; there is one expedition and one main information arc. Art is simple 2D. Long-term attachment, robust screen-reader play, fully supported touch interaction and the eventual 3D design are unproven.
+
+## Additional refinement pass, September 15
+
+Eight additional scenario regressions verify safe retreat under cautious instructions, Bram's independent route knowledge, a prepared solo expedition, unseen-return privacy, preservation of confirmed evidence, single-conversation attention, limited whisper coverage for staff, and migration of existing saves. All 34 pass.
+
+The actual browser loaded a pre-refinement day-four save without losing progress. The journal omitted unseen relationships, its return button closed normally, and choosing River green then reloading preserved that coat selection. These were browser UI checks; the new expedition branches were exercised through the simulation, not a complete wall-clock browser replay. No movement geometry changed in this pass.
 

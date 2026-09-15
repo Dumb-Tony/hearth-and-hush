@@ -1,6 +1,19 @@
 // Player-facing choices name the information or action explicitly. Neutral
 // conversation exits never count as refusing a request or sharing a secret.
 const Dialogue = {
+  personalNote(n) {
+    return {
+      cedric:
+        "Cedric told me he is paying for his sister’s glassmaking apprenticeship.",
+      mira: "Mira told me she is saving enough to leave the people she works for.",
+      nell: "Nell told me she wants to buy a small boat.",
+      oren: "Oren told me he needs the shipments to pay his drivers and feed his horses.",
+      tomas: "Tomas told me he needs evidence he can use in his report.",
+      aldous: "Aldous asked for blankets and food for families at the chapel.",
+      bram: "Bram told me he wants to keep Cedric safe while he learns.",
+      ivo: "Ivo told me he found the inn in three old treaties. He wants to know why people met here.",
+    }[n.id];
+  },
   choices(s, n) {
     const options = [];
     const add = (verb, label, detail, disabled = false) =>
@@ -9,32 +22,32 @@ const Dialogue = {
       add(
         "share",
         "Tell Mira about the missing wagons",
-        "She will learn what you know. She may tell other people.",
+        "I will tell Mira what I know. She may tell other people.",
       );
       add(
         "withhold",
         "Don't tell Mira about the wagons",
-        "Tell her you are keeping this information private.",
+        "I will tell Mira I am keeping this information private.",
       );
     }
     if (n.id === "oren") {
       if (s.knowledge.wagons && !s.world.sold) {
         add(
           "sell",
-          "Sell your wagon information · 15 coins",
-          "Oren pays you for what you know about the missing shipment.",
+          "Sell Oren my wagon information · 15 coins",
+          "Oren will pay me 15 coins for my information about the missing wagons.",
         );
         add(
           "withhold",
           "Don't sell Oren the information",
-          "Refuse his offer. You keep the information and receive no payment.",
+          "I will refuse Oren’s offer, keep my information and receive no payment.",
         );
       }
       if (s.knowledge.ledger && !s.world.exploited)
         add(
           "exploit",
           "Demand 25 coins to keep the ledger secret",
-          "Threaten to expose Oren's payments unless he pays you. He will remember this.",
+          "I will threaten to expose Oren’s payments unless he pays me. He will remember this.",
         );
     }
     if (n.id === "nell") {
@@ -43,41 +56,41 @@ const Dialogue = {
           "hire",
           "Hire Nell · 12 coins",
           s.coins < 12
-            ? "You need 12 coins to hire her. Her wage is 3 coins per day."
-            : "She serves the public tables. Her wage is 3 coins per day.",
+            ? "I need 12 coins to hire Nell. I will also owe her 3 coins per day."
+            : "Nell will serve my public tables. I will pay her 3 coins per day.",
           s.coins < 12,
         );
       else
         add(
           "report",
           "Ask Nell what she overheard",
-          "Hear her account of conversations she was close enough to understand.",
+          "I will ask Nell to repeat conversations she was close enough to understand.",
         );
     }
     if (n.id === "cedric" && s.quest?.resolved && !s.quest.debriefed)
       add(
         "debrief",
         "Ask what happened on the expedition",
-        "Hear his full account and inspect anything he brought back.",
+        "I will hear Cedric’s full account and inspect anything he brought back.",
       );
     if (n.id === "tomas") {
       if (s.events.search) {
         add(
           "cooperate",
           "Let Tomas search the inn",
-          "Give the watch permission to look for evidence.",
+          "I will give Tomas permission to search my inn for evidence.",
         );
         add(
           "withhold",
           "Refuse the search",
-          "Do not let the watch search. Tomas will record your refusal.",
+          "I will refuse Tomas permission to search my inn. He will record my refusal.",
         );
       }
       if (s.knowledge.ledger)
         add(
           "testify",
           "Give Tomas the ledger as evidence",
-          "Show the watch the record of Oren's payments.",
+          "I will give Tomas the record of Oren’s payments.",
         );
     }
     return options;

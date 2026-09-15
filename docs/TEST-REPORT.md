@@ -52,6 +52,14 @@ Please play without reading the scenario code. Useful notes: whom you remembered
 
 The public GitHub Pages URL was opened in the browser and the onboarding and playable scene loaded successfully. GitHub Actions completed both validation/build and deployment successfully.
 
+## Keeper perspective and interface follow-up
+
+All 38 scenario regressions pass, including new checks for old-memory migration, repeat-load stability, and the direction and one-time payment of an information sale. The existing complete movement route and full-week simulation checks remain green; collision geometry is unchanged.
+
+During browser playtesting, an existing save displayed Nell’s hiring memory in the keeper’s voice. Walking through the room and talking to Oren exposed the sale choice; executing it and talking again displayed “I sold Oren information about the missing wagons. He paid me 15 coins.” The sale choice disappeared. Journal navigation, pause behavior, nameplates, room details and panel layout were checked. Expanded notes initially made the panel too tall; smaller portraits and tighter spacing improved it, with scrolling retained for long conversations. The empty-journal wording was also corrected because other notes can exist without any leads.
+
+These are agent-driven browser checks and automated simulation tests, not a human feel test.
+
 ## Remaining limits
 
 See README for explicit feature deferrals. Most importantly, authored schedules are a bounded prototype of independent lives; there is one expedition and one main information arc. Art is simple 2D. Long-term attachment, robust screen-reader play, fully supported touch interaction and the eventual 3D design are unproven.

@@ -77,21 +77,10 @@ function startGame() {
 }
 function talk(id) {
   if (!doAct("talk", id)) return;
-  const n = Sim.npc(state, id),
-    def = DATA.npcs.find((d) => d.id === id);
+  const n = Sim.npc(state, id);
   const memories = n.memory
     .slice(-3)
-    .map(
-      (t) =>
-        "<li>" +
-        esc(
-          t.replace(
-            "You declined to share your confidence.",
-            "You chose not to share information.",
-          ),
-        ) +
-        "</li>",
-    )
+    .map((t) => "<li>" + esc(t) + "</li>")
     .join("");
   const options = Dialogue.choices(state, n)
     .map(
@@ -108,19 +97,19 @@ function talk(id) {
       esc(n.role) +
       "</div><h2>" +
       esc(n.name) +
-      '</h2></div></div><p class="spoken">“' +
-      esc(Dialogue.line(state, n)) +
-      '”</p><details class="person-notes"><summary>About ' +
+      '</h2></div></div><div class="speech-label">' +
       esc(n.name) +
-      "</summary><p>“" +
-      esc(def.ambition) +
-      "”</p>" +
+      ' says</div><p class="spoken">“' +
+      esc(Dialogue.line(state, n)) +
+      '”</p><details open class="person-notes"><summary>My notes about ' +
+      esc(n.name) +
+      "</summary><p>" +
+      esc(Dialogue.personalNote(n)) +
+      "</p>" +
       (n.familiar > 2
         ? '<p class="muted">Favorite order: ' + esc(n.favorite) + ".</p>"
         : "") +
-      (memories
-        ? "<h3>What " + esc(n.name) + " remembers</h3><ul>" + memories + "</ul>"
-        : "") +
+      (memories ? "<h3>What I did</h3><ul>" + memories + "</ul>" : "") +
       '</details><div class="decisions">' +
       options +
       '</div><div class="actions">' +
@@ -163,7 +152,7 @@ function dispatch() {
 }
 function journal(filter = "") {
   panel(
-    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}</div>`,
+    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What I know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}</div>`,
     "journal",
   );
   filterJournal(filter);
@@ -179,11 +168,11 @@ function filterJournal(filter) {
     entries
       .map(
         (k) =>
-          `<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map((o) => `Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join("<br>")}<br>Known to you: ${[...new Set(k.knownBy)].map(esc).join(", ")}</p></article>`,
+          `<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map((o) => `Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join("<br>")}<br>People I know have this information: ${[...new Set(k.knownBy)].map((n) => esc(n === "keeper" ? "Me" : n)).join(", ")}</p></article>`,
       )
       .join("") +
     (!entries.length
-      ? "<p>No matching notes. Begin with the people in the room.</p>"
+      ? "<p>No matching leads. My other notes are below.</p>"
       : "") +
     "<h3>People & choices</h3>" +
     state.notes
@@ -322,12 +311,22 @@ function person(n, isPlayer = false) {
   if (n.id === "cedric" && state.quest?.outcome === "injured")
     rect(n.x - 9, n.y - 14, 18, 4, "#e8dbb5");
   ctx.save();
+  const label = isPlayer ? state.player.name : n.name;
+  ctx.font = "600 13px system-ui";
+  const width = ctx.measureText(label).width + 16;
+  ctx.fillStyle = isPlayer ? "#294744ed" : "#18272de8";
+  ctx.beginPath();
+  ctx.roundRect(n.x - width / 2, n.y + 16, width, 21, 6);
+  ctx.fill();
+  ctx.strokeStyle = isPlayer ? "#dcb579" : "#9f957866";
+  ctx.lineWidth = 1;
+  ctx.stroke();
   ctx.shadowColor = "#111a22";
   ctx.shadowBlur = 4;
   text(
     isPlayer ? state.player.name : n.name,
     n.x,
-    n.y + 29,
+    n.y + 31,
     13,
     isPlayer ? "#ffe6ad" : "#f0dcc0",
   );
@@ -397,8 +396,7 @@ function draw() {
             ? `Hold E · Prepare ${st.id}`
             : `E · ${st.name}`
           : "Walk close. Listen a little longer.";
-  rect(260, 5, 480, 28, "#102020d9");
-  text(hint, 500, 24, 14, "#ead7ae");
+  $("interaction-hint").textContent = hint;
   if (state.pour > 0) {
     rect(state.player.x - 15, state.player.y + 36, 30, 3, "#272d28");
     rect(
@@ -418,7 +416,7 @@ function draw() {
           ? "Evening"
           : "Closing";
   $("status").innerHTML =
-    `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><br>${DATA.dayNames[state.day - 1]} &nbsp; · &nbsp; ${state.coins} coins`;
+    `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><div class="day-track" aria-hidden="true"><i style="width:${(100 * state.time) / 180}%"></i></div><span>${DATA.dayNames[state.day - 1]}</span> <strong class="coin-count">${state.coins} coins</strong>`;
   $("pause").textContent = state.paused ? "Resume" : "Pause";
   $("toast").textContent =
     state.toastTime > 0

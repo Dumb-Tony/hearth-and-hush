@@ -400,3 +400,128 @@ button:hover {
 main {
   max-width: min(1260px, calc((100vh - 180px) * 1.51515 + 40px));
 }
+/* Readable UI separates spoken dialogue from the keeper's written account. */
+#interaction-hint {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  width: max-content;
+  padding: 8px 15px;
+  border: 1px solid #bd9e6555;
+  border-radius: 20px;
+  background: #12272deb;
+  color: #f5dfb6;
+  font: 600 13px/1.35 system-ui;
+  box-shadow: 0 3px 12px #0005;
+  pointer-events: none;
+  text-align: center;
+}
+.day-track {
+  height: 4px;
+  border-radius: 8px;
+  background: #0c1b23;
+  margin: 7px 0;
+  overflow: hidden;
+}
+.day-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #88b8a0, #dfb976);
+}
+.coin-count {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 8px;
+  border: 1px solid #b3935755;
+  border-radius: 20px;
+  color: #f2d59e;
+  background: #b08c3312;
+  font-size: 12px;
+}
+.speech-label {
+  font: 600 11px system-ui;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #91c1b5;
+  margin-top: 17px;
+}
+#panel .spoken {
+  margin: 8px 0 20px;
+  padding: 12px 16px;
+  border-left: 3px solid #83ad9e;
+  background: #101f273d;
+  border-radius: 0 8px 8px 0;
+  font-size: 18px;
+}
+.person-notes {
+  background: #121e274a;
+  border: 1px solid #90a09133;
+  border-radius: 8px;
+  padding: 12px 15px;
+}
+.person-notes summary {
+  font-weight: 600;
+  color: #efcf96;
+}
+.person-notes h3 {
+  font: 600 12px system-ui;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #c8b691;
+  margin: 16px 0 6px;
+}
+.person-notes ul {
+  padding-left: 18px;
+  margin: 6px 0;
+}
+.person-notes li {
+  line-height: 1.6;
+  color: #e4dfcb;
+}
+.quote-label {
+  color: #9cbbb4;
+  font-size: 12px;
+}
+#entries article {
+  border-left: 3px solid #a88c56;
+  background: #11242b66;
+  border-radius: 8px;
+  padding: 15px 18px;
+  margin: 12px 0;
+}
+#search {
+  background: #12242c;
+  border: 1px solid #82968c;
+  border-radius: 8px;
+  padding: 12px;
+  color: #f3e4c6;
+}
+@media (max-height: 620px) {
+  main {
+    max-width: min(1260px, calc((100vh - 130px) * 1.51515 + 40px));
+  }
+  .character-head canvas {
+    width: 65px;
+    height: 69px;
+  }
+  #panel {
+    padding: 20px;
+  }
+}
+#panel {
+  scrollbar-color: #819285 #1c2b35;
+  scrollbar-width: thin;
+  padding: 24px 28px;
+}
+.character-head canvas {
+  width: 72px;
+  height: 76px;
+}
+.person-notes p {
+  margin: 8px 0 !important;
+}
+#panel .spoken {
+  margin-bottom: 14px;
+}

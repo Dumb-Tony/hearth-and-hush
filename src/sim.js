@@ -137,7 +137,72 @@ const Sim = (() => {
       toastTime: 0,
     };
   }
+  // Saved notes use the keeper's voice. Explicit mappings preserve who did what
+  // when migrating memories originally written as an NPC addressing the keeper.
+  function keeperNote(t) {
+    if (
+      t ===
+      "Nell joined: 12 coins now, 3 additional coins each closing. Public-table service and imperfect reports."
+    )
+      return "I hired Nell for 12 coins and agreed to pay her 3 coins each day. She serves the public tables and tells me what she overhears.";
+    if (
+      t ===
+      "Oren bought your road news. He asked you to stop troubling the watch."
+    )
+      return "I sold Oren information about the wagons for 15 coins. He asked me not to tell the watch.";
+    return t
+      .replace(/\b(asked|told|paid) you\b/g, "$1 me")
+      .replace(/\bfrom you\b/g, "from me")
+      .replace(/\bto you\b/g, "to me")
+      .replace(/\byours\b/g, "mine")
+      .replace(/\byourself\b/g, "myself")
+      .replace(/\bYour\b/g, "My")
+      .replace(/\byour\b/g, "my")
+      .replace(/\bYou\b/g, "I")
+      .replace(/\byou\b/g, "I");
+  }
+  function memoryText(n, t) {
+    const old = {
+      "You sold me the road news for 15 coins.":
+        "I sold Oren information about the missing wagons. He paid me 15 coins.",
+      "You trusted me with the wagon trail.":
+        "I told Mira what I knew about the missing wagons.",
+      "You used my ledger against me.":
+        "I threatened to expose Oren’s ledger. He paid me 25 coins to keep it secret.",
+      "You gave me steady work.":
+        "I hired Nell for 12 coins and agreed to pay her 3 coins each day.",
+      "You cooperated with the watch search.": "I let Tomas search the inn.",
+      "You gave evidence, not just a name.":
+        "I gave Tomas the ledger as evidence against Oren.",
+      "You refused to let me search the inn.":
+        "I refused to let Tomas search the inn.",
+      "You refused to tell me what you know about the missing wagons.":
+        "I chose not to tell " +
+        n.name +
+        " what I knew about the missing wagons.",
+      "You declined to share your confidence.":
+        "I chose not to share information with " + n.name + ".",
+      "You sent us onto a broken road without enough preparation.":
+        "I sent " +
+        n.name +
+        " to the tollhouse without enough preparation for the broken bridge.",
+      "You gave us permission to turn back safely.":
+        "I told " + n.name + " to turn back if the route was unsafe.",
+      "You made sure we had a way home.":
+        "I sent " +
+        n.name +
+        " to the tollhouse. The expedition returned safely.",
+    };
+    if (old[t]) return old[t];
+    if (t.startsWith("You brought "))
+      return t.replace("You brought ", "I served " + n.name + " ");
+    return keeperNote(t);
+  }
+  function remember(n, t) {
+    n.memory.push(memoryText(n, t));
+  }
   function note(s, t) {
+    t = keeperNote(t);
     s.notes.unshift({ day: s.day, text: t });
     s.notes = s.notes.slice(0, 50);
   }
@@ -300,7 +365,8 @@ const Sim = (() => {
       n.away = false;
       n.present = false;
       n.goal = null;
-      n.memory.push(
+      remember(
+        n,
         q.outcome === "injured"
           ? "You sent us onto a broken road without enough preparation."
           : q.outcome === "turnedBack"
@@ -545,7 +611,7 @@ const Sim = (() => {
       n.familiar += favorite ? 2 : 1;
       n.served = 1;
       s.coins += paid ? (favorite ? 5 : 3) : 0;
-      n.memory.push("You brought " + s.player.carry + " on day " + s.day + ".");
+      remember(n, "You brought " + s.player.carry + " on day " + s.day + ".");
       say(
         s,
         n.name +
@@ -573,7 +639,7 @@ const Sim = (() => {
       s.world.leak = true;
       n.known.push("wagons");
       s.knowledge.wagons.knownBy.push("Mira");
-      n.memory.push("You trusted me with the wagon trail.");
+      remember(n, "You trusted me with the wagon trail.");
       s.relationships["cedric:mira"] = "Mira is keeping something from Cedric";
       note(s, "You told Mira about the wagons. She promised to ask around.");
       say(s, "Mira: I know people who can help. Leave it with me.");
@@ -585,11 +651,11 @@ const Sim = (() => {
       s.coins += 15;
       n.known.push("keeper knows wagons");
       s.knowledge.wagons.knownBy.push("Oren");
-      n.memory.push("You sold me the road news for 15 coins.");
+      remember(n, "You sold me the road news for 15 coins.");
       s.world.trade = "Oren controls the road story";
       note(
         s,
-        "Oren bought your road news. He asked you to stop troubling the watch.",
+        "I sold Oren information about the wagons for 15 coins. He asked me not to tell the watch.",
       );
       return true;
     }
@@ -602,7 +668,8 @@ const Sim = (() => {
       if (search)
         s.world.guard =
           "You declined the watch search; Tomas left without your testimony";
-      n.memory.push(
+      remember(
+        n,
         search
           ? "You refused to let me search the inn."
           : "You refused to tell me what you know about the missing wagons.",
@@ -627,7 +694,7 @@ const Sim = (() => {
         return false;
       s.world.exploited = true;
       s.coins += 25;
-      n.memory.push("You used my ledger against me.");
+      remember(n, "You used my ledger against me.");
       s.world.trade = "Oren pays for your silence; the detour remains";
       note(
         s,
@@ -639,7 +706,7 @@ const Sim = (() => {
       if (id !== "nell" || s.staff.hired || s.coins < 12) return false;
       s.coins -= 12;
       s.staff.hired = true;
-      n.memory.push("You gave me steady work.");
+      remember(n, "You gave me steady work.");
       note(
         s,
         "Nell joined: 12 coins now, 3 additional coins each closing. Public-table service and imperfect reports.",
@@ -782,7 +849,7 @@ const Sim = (() => {
       s.world.guard = s.knowledge.ledger
         ? "Tomas has your evidence and permission to search"
         : "Tomas searched but found no proof";
-      n.memory.push("You cooperated with the watch search.");
+      remember(n, "You cooperated with the watch search.");
       note(s, s.world.guard + ".");
       say(s, "Tomas: Thank you. I will write down what we actually found.");
       return true;
@@ -791,7 +858,7 @@ const Sim = (() => {
       if (id !== "tomas" || !s.knowledge.ledger) return false;
       s.world.guard = "Tomas holds the ledger testimony";
       s.world.trade = "The watch reopened the road; trade returns to Rookcross";
-      n.memory.push("You gave evidence, not just a name.");
+      remember(n, "You gave evidence, not just a name.");
       s.knowledge.ledger.knownBy.push("Tomas");
       note(s, "You gave Tomas the ledger. The watch can act on evidence.");
       return true;
@@ -812,7 +879,7 @@ const Sim = (() => {
         ? s.quest.outcome === "proof"
           ? "Cedric returned with proof and a story he can tell his sister."
           : s.quest.outcome === "compromised"
-            ? "Your party came home to a secret already spent. Cedric and Mira have things to say."
+            ? "The Reed Knives emptied the tollhouse before my party arrived. Cedric suspects Mira told them."
             : s.quest.outcome === "turnedBack"
               ? "Cedric returned safely without proof. He trusted your instruction to turn back."
               : s.quest.outcome === "injured"
@@ -829,7 +896,7 @@ const Sim = (() => {
       s.knowledge.carving
         ? "And those names beneath the hearth still do not explain themselves."
         : "The old inn has more to tell.",
-    ];
+    ].map(keeperNote);
   }
   function restore(raw) {
     try {
@@ -909,7 +976,9 @@ const Sim = (() => {
       for (const n of s.npcs) {
         n.path = [];
         n.goal = null;
+        n.memory = n.memory.map((t) => memoryText(n, t));
       }
+      s.notes = s.notes.map((n) => ({ ...n, text: keeperNote(n.text) }));
       return s;
     } catch {
       return fresh();
@@ -917,6 +986,7 @@ const Sim = (() => {
   }
   return {
     fresh,
+    keeperNote,
     restore,
     tick,
     act,

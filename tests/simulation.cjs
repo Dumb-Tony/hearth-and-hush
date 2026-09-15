@@ -265,7 +265,11 @@ test("selling and exploiting information have distinct persistent outcomes", () 
   assert(Sim.act(s, "exploit", "oren"));
   assert.equal(s.coins, 64);
   assert(s.world.trade.includes("silence"));
-  assert(Sim.npc(s, "oren").memory.some((m) => m.includes("against me")));
+  assert(
+    Sim.npc(s, "oren").memory.some((m) =>
+      m.includes("I threatened to expose Oren"),
+    ),
+  );
 });
 test("testimony changes the road without a morality meter", () => {
   let s = Sim.fresh();
@@ -542,5 +546,53 @@ test("dialogue refreshes authored copy in existing saves", () => {
   );
   s.coins = 0;
   assert(Dialogue.choices(s, nell).find((o) => o.verb === "hire").disabled);
+});
+test("legacy transaction memories migrate once without reversing the payment", () => {
+  const s = Sim.fresh();
+  const oren = Sim.npc(s, "oren");
+  oren.memory = [
+    "You sold me the road news for 15 coins.",
+    "You used my ledger against me.",
+  ];
+  Sim.npc(s, "nell").memory = [
+    "You brought tea on day 2.",
+    "You gave me steady work.",
+  ];
+  s.notes = [
+    {
+      day: 2,
+      text: "You gave Tomas the ledger. The watch can act on evidence.",
+    },
+  ];
+  const restored = Sim.restore(JSON.stringify(s));
+  assert.equal(restored.coins, s.coins);
+  assert.equal(
+    Sim.npc(restored, "oren").memory[0],
+    "I sold Oren information about the missing wagons. He paid me 15 coins.",
+  );
+  assert.equal(
+    Sim.npc(restored, "nell").memory[0],
+    "I served Nell tea on day 2.",
+  );
+  assert(restored.notes[0].text.startsWith("I gave Tomas"));
+  const again = Sim.restore(JSON.stringify(restored));
+  assert.deepEqual(
+    again.npcs.map((n) => n.memory),
+    restored.npcs.map((n) => n.memory),
+  );
+});
+test("new sale records keeper as seller and Oren as payer", () => {
+  const s = Sim.fresh();
+  Sim.learn(s, "wagons", "witness");
+  const oren = place(s, "oren"),
+    before = s.coins;
+  assert(Sim.act(s, "sell", "oren"));
+  assert.equal(s.coins, before + 15);
+  assert.equal(
+    oren.memory.at(-1),
+    "I sold Oren information about the missing wagons. He paid me 15 coins.",
+  );
+  assert(!Sim.act(s, "sell", "oren"));
+  assert.equal(s.coins, before + 15);
 });
 console.log("\n" + count + " scenario regressions passed.");

@@ -400,7 +400,132 @@ button:hover {
 main {
   max-width: min(1260px, calc((100vh - 180px) * 1.51515 + 40px));
 }
-</style></head><body><header><div><small>Rookcross • a working inn</small><h1>HEARTH & HUSH</h1></div><div id="status" class="status"></div><div class="tools"><button id="pause" onclick="pause()">Pause</button><button onclick="journal()">Journal · J</button><button id="sound" onclick="toggleAmbience()">Sound off</button><button onclick="settings()">Settings</button></div></header><main><div id="stage"><canvas id="game" width="1000" height="660" aria-label="Living tavern. Use WASD or arrow keys to move and E to interact."></canvas><div id="caption" aria-live="polite"></div><button id="touch" onclick="interact()">Interact</button></div><div id="toast" role="status"></div><footer><span><kbd>WASD</kbd> move · <kbd>E</kbd> interact / hold to pour · <kbd>Space</kbd> pause · <kbd>J</kbd> journal</span><span>Provisional codename · standalone vertical slice</span></footer></main><div id="overlay"><section id="panel" role="dialog" aria-label="Innkeeper interaction"></section></div><script>/* Stable-ID character, story and layout content. */
+/* Readable UI separates spoken dialogue from the keeper's written account. */
+#interaction-hint {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  width: max-content;
+  padding: 8px 15px;
+  border: 1px solid #bd9e6555;
+  border-radius: 20px;
+  background: #12272deb;
+  color: #f5dfb6;
+  font: 600 13px/1.35 system-ui;
+  box-shadow: 0 3px 12px #0005;
+  pointer-events: none;
+  text-align: center;
+}
+.day-track {
+  height: 4px;
+  border-radius: 8px;
+  background: #0c1b23;
+  margin: 7px 0;
+  overflow: hidden;
+}
+.day-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #88b8a0, #dfb976);
+}
+.coin-count {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 8px;
+  border: 1px solid #b3935755;
+  border-radius: 20px;
+  color: #f2d59e;
+  background: #b08c3312;
+  font-size: 12px;
+}
+.speech-label {
+  font: 600 11px system-ui;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #91c1b5;
+  margin-top: 17px;
+}
+#panel .spoken {
+  margin: 8px 0 20px;
+  padding: 12px 16px;
+  border-left: 3px solid #83ad9e;
+  background: #101f273d;
+  border-radius: 0 8px 8px 0;
+  font-size: 18px;
+}
+.person-notes {
+  background: #121e274a;
+  border: 1px solid #90a09133;
+  border-radius: 8px;
+  padding: 12px 15px;
+}
+.person-notes summary {
+  font-weight: 600;
+  color: #efcf96;
+}
+.person-notes h3 {
+  font: 600 12px system-ui;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #c8b691;
+  margin: 16px 0 6px;
+}
+.person-notes ul {
+  padding-left: 18px;
+  margin: 6px 0;
+}
+.person-notes li {
+  line-height: 1.6;
+  color: #e4dfcb;
+}
+.quote-label {
+  color: #9cbbb4;
+  font-size: 12px;
+}
+#entries article {
+  border-left: 3px solid #a88c56;
+  background: #11242b66;
+  border-radius: 8px;
+  padding: 15px 18px;
+  margin: 12px 0;
+}
+#search {
+  background: #12242c;
+  border: 1px solid #82968c;
+  border-radius: 8px;
+  padding: 12px;
+  color: #f3e4c6;
+}
+@media (max-height: 620px) {
+  main {
+    max-width: min(1260px, calc((100vh - 130px) * 1.51515 + 40px));
+  }
+  .character-head canvas {
+    width: 65px;
+    height: 69px;
+  }
+  #panel {
+    padding: 20px;
+  }
+}
+#panel {
+  scrollbar-color: #819285 #1c2b35;
+  scrollbar-width: thin;
+  padding: 24px 28px;
+}
+.character-head canvas {
+  width: 72px;
+  height: 76px;
+}
+.person-notes p {
+  margin: 8px 0 !important;
+}
+#panel .spoken {
+  margin-bottom: 14px;
+}
+</style></head><body><header><div><small>Rookcross • a working inn</small><h1>HEARTH & HUSH</h1></div><div id="status" class="status"></div><div class="tools"><button id="pause" onclick="pause()">Pause</button><button onclick="journal()">Journal · J</button><button id="sound" onclick="toggleAmbience()">Sound off</button><button onclick="settings()">Settings</button></div></header><main><div id="stage"><canvas id="game" width="1000" height="660" aria-label="Living tavern. Use WASD or arrow keys to move and E to interact."></canvas><div id="interaction-hint" aria-live="polite"></div><div id="caption" aria-live="polite"></div><button id="touch" onclick="interact()">Interact</button></div><div id="toast" role="status"></div><footer><span><kbd>WASD</kbd> move · <kbd>E</kbd> interact / hold to pour · <kbd>Space</kbd> pause · <kbd>J</kbd> journal</span><span>Provisional codename · standalone vertical slice</span></footer></main><div id="overlay"><section id="panel" role="dialog" aria-label="Innkeeper interaction"></section></div><script>/* Stable-ID character, story and layout content. */
 const DATA = {
   npcs: [
     {
@@ -1043,7 +1168,72 @@ const Sim = (() => {
       toastTime: 0,
     };
   }
+  // Saved notes use the keeper's voice. Explicit mappings preserve who did what
+  // when migrating memories originally written as an NPC addressing the keeper.
+  function keeperNote(t) {
+    if (
+      t ===
+      "Nell joined: 12 coins now, 3 additional coins each closing. Public-table service and imperfect reports."
+    )
+      return "I hired Nell for 12 coins and agreed to pay her 3 coins each day. She serves the public tables and tells me what she overhears.";
+    if (
+      t ===
+      "Oren bought your road news. He asked you to stop troubling the watch."
+    )
+      return "I sold Oren information about the wagons for 15 coins. He asked me not to tell the watch.";
+    return t
+      .replace(/\b(asked|told|paid) you\b/g, "$1 me")
+      .replace(/\bfrom you\b/g, "from me")
+      .replace(/\bto you\b/g, "to me")
+      .replace(/\byours\b/g, "mine")
+      .replace(/\byourself\b/g, "myself")
+      .replace(/\bYour\b/g, "My")
+      .replace(/\byour\b/g, "my")
+      .replace(/\bYou\b/g, "I")
+      .replace(/\byou\b/g, "I");
+  }
+  function memoryText(n, t) {
+    const old = {
+      "You sold me the road news for 15 coins.":
+        "I sold Oren information about the missing wagons. He paid me 15 coins.",
+      "You trusted me with the wagon trail.":
+        "I told Mira what I knew about the missing wagons.",
+      "You used my ledger against me.":
+        "I threatened to expose Oren’s ledger. He paid me 25 coins to keep it secret.",
+      "You gave me steady work.":
+        "I hired Nell for 12 coins and agreed to pay her 3 coins each day.",
+      "You cooperated with the watch search.": "I let Tomas search the inn.",
+      "You gave evidence, not just a name.":
+        "I gave Tomas the ledger as evidence against Oren.",
+      "You refused to let me search the inn.":
+        "I refused to let Tomas search the inn.",
+      "You refused to tell me what you know about the missing wagons.":
+        "I chose not to tell " +
+        n.name +
+        " what I knew about the missing wagons.",
+      "You declined to share your confidence.":
+        "I chose not to share information with " + n.name + ".",
+      "You sent us onto a broken road without enough preparation.":
+        "I sent " +
+        n.name +
+        " to the tollhouse without enough preparation for the broken bridge.",
+      "You gave us permission to turn back safely.":
+        "I told " + n.name + " to turn back if the route was unsafe.",
+      "You made sure we had a way home.":
+        "I sent " +
+        n.name +
+        " to the tollhouse. The expedition returned safely.",
+    };
+    if (old[t]) return old[t];
+    if (t.startsWith("You brought "))
+      return t.replace("You brought ", "I served " + n.name + " ");
+    return keeperNote(t);
+  }
+  function remember(n, t) {
+    n.memory.push(memoryText(n, t));
+  }
   function note(s, t) {
+    t = keeperNote(t);
     s.notes.unshift({ day: s.day, text: t });
     s.notes = s.notes.slice(0, 50);
   }
@@ -1206,7 +1396,8 @@ const Sim = (() => {
       n.away = false;
       n.present = false;
       n.goal = null;
-      n.memory.push(
+      remember(
+        n,
         q.outcome === "injured"
           ? "You sent us onto a broken road without enough preparation."
           : q.outcome === "turnedBack"
@@ -1451,7 +1642,7 @@ const Sim = (() => {
       n.familiar += favorite ? 2 : 1;
       n.served = 1;
       s.coins += paid ? (favorite ? 5 : 3) : 0;
-      n.memory.push("You brought " + s.player.carry + " on day " + s.day + ".");
+      remember(n, "You brought " + s.player.carry + " on day " + s.day + ".");
       say(
         s,
         n.name +
@@ -1479,7 +1670,7 @@ const Sim = (() => {
       s.world.leak = true;
       n.known.push("wagons");
       s.knowledge.wagons.knownBy.push("Mira");
-      n.memory.push("You trusted me with the wagon trail.");
+      remember(n, "You trusted me with the wagon trail.");
       s.relationships["cedric:mira"] = "Mira is keeping something from Cedric";
       note(s, "You told Mira about the wagons. She promised to ask around.");
       say(s, "Mira: I know people who can help. Leave it with me.");
@@ -1491,11 +1682,11 @@ const Sim = (() => {
       s.coins += 15;
       n.known.push("keeper knows wagons");
       s.knowledge.wagons.knownBy.push("Oren");
-      n.memory.push("You sold me the road news for 15 coins.");
+      remember(n, "You sold me the road news for 15 coins.");
       s.world.trade = "Oren controls the road story";
       note(
         s,
-        "Oren bought your road news. He asked you to stop troubling the watch.",
+        "I sold Oren information about the wagons for 15 coins. He asked me not to tell the watch.",
       );
       return true;
     }
@@ -1508,7 +1699,8 @@ const Sim = (() => {
       if (search)
         s.world.guard =
           "You declined the watch search; Tomas left without your testimony";
-      n.memory.push(
+      remember(
+        n,
         search
           ? "You refused to let me search the inn."
           : "You refused to tell me what you know about the missing wagons.",
@@ -1533,7 +1725,7 @@ const Sim = (() => {
         return false;
       s.world.exploited = true;
       s.coins += 25;
-      n.memory.push("You used my ledger against me.");
+      remember(n, "You used my ledger against me.");
       s.world.trade = "Oren pays for your silence; the detour remains";
       note(
         s,
@@ -1545,7 +1737,7 @@ const Sim = (() => {
       if (id !== "nell" || s.staff.hired || s.coins < 12) return false;
       s.coins -= 12;
       s.staff.hired = true;
-      n.memory.push("You gave me steady work.");
+      remember(n, "You gave me steady work.");
       note(
         s,
         "Nell joined: 12 coins now, 3 additional coins each closing. Public-table service and imperfect reports.",
@@ -1688,7 +1880,7 @@ const Sim = (() => {
       s.world.guard = s.knowledge.ledger
         ? "Tomas has your evidence and permission to search"
         : "Tomas searched but found no proof";
-      n.memory.push("You cooperated with the watch search.");
+      remember(n, "You cooperated with the watch search.");
       note(s, s.world.guard + ".");
       say(s, "Tomas: Thank you. I will write down what we actually found.");
       return true;
@@ -1697,7 +1889,7 @@ const Sim = (() => {
       if (id !== "tomas" || !s.knowledge.ledger) return false;
       s.world.guard = "Tomas holds the ledger testimony";
       s.world.trade = "The watch reopened the road; trade returns to Rookcross";
-      n.memory.push("You gave evidence, not just a name.");
+      remember(n, "You gave evidence, not just a name.");
       s.knowledge.ledger.knownBy.push("Tomas");
       note(s, "You gave Tomas the ledger. The watch can act on evidence.");
       return true;
@@ -1718,7 +1910,7 @@ const Sim = (() => {
         ? s.quest.outcome === "proof"
           ? "Cedric returned with proof and a story he can tell his sister."
           : s.quest.outcome === "compromised"
-            ? "Your party came home to a secret already spent. Cedric and Mira have things to say."
+            ? "The Reed Knives emptied the tollhouse before my party arrived. Cedric suspects Mira told them."
             : s.quest.outcome === "turnedBack"
               ? "Cedric returned safely without proof. He trusted your instruction to turn back."
               : s.quest.outcome === "injured"
@@ -1735,7 +1927,7 @@ const Sim = (() => {
       s.knowledge.carving
         ? "And those names beneath the hearth still do not explain themselves."
         : "The old inn has more to tell.",
-    ];
+    ].map(keeperNote);
   }
   function restore(raw) {
     try {
@@ -1815,7 +2007,9 @@ const Sim = (() => {
       for (const n of s.npcs) {
         n.path = [];
         n.goal = null;
+        n.memory = n.memory.map((t) => memoryText(n, t));
       }
+      s.notes = s.notes.map((n) => ({ ...n, text: keeperNote(n.text) }));
       return s;
     } catch {
       return fresh();
@@ -1823,6 +2017,7 @@ const Sim = (() => {
   }
   return {
     fresh,
+    keeperNote,
     restore,
     tick,
     act,
@@ -1846,6 +2041,19 @@ if (typeof module !== "undefined") module.exports = Sim;
 // Player-facing choices name the information or action explicitly. Neutral
 // conversation exits never count as refusing a request or sharing a secret.
 const Dialogue = {
+  personalNote(n) {
+    return {
+      cedric:
+        "Cedric told me he is paying for his sister’s glassmaking apprenticeship.",
+      mira: "Mira told me she is saving enough to leave the people she works for.",
+      nell: "Nell told me she wants to buy a small boat.",
+      oren: "Oren told me he needs the shipments to pay his drivers and feed his horses.",
+      tomas: "Tomas told me he needs evidence he can use in his report.",
+      aldous: "Aldous asked for blankets and food for families at the chapel.",
+      bram: "Bram told me he wants to keep Cedric safe while he learns.",
+      ivo: "Ivo told me he found the inn in three old treaties. He wants to know why people met here.",
+    }[n.id];
+  },
   choices(s, n) {
     const options = [];
     const add = (verb, label, detail, disabled = false) =>
@@ -1854,32 +2062,32 @@ const Dialogue = {
       add(
         "share",
         "Tell Mira about the missing wagons",
-        "She will learn what you know. She may tell other people.",
+        "I will tell Mira what I know. She may tell other people.",
       );
       add(
         "withhold",
         "Don't tell Mira about the wagons",
-        "Tell her you are keeping this information private.",
+        "I will tell Mira I am keeping this information private.",
       );
     }
     if (n.id === "oren") {
       if (s.knowledge.wagons && !s.world.sold) {
         add(
           "sell",
-          "Sell your wagon information · 15 coins",
-          "Oren pays you for what you know about the missing shipment.",
+          "Sell Oren my wagon information · 15 coins",
+          "Oren will pay me 15 coins for my information about the missing wagons.",
         );
         add(
           "withhold",
           "Don't sell Oren the information",
-          "Refuse his offer. You keep the information and receive no payment.",
+          "I will refuse Oren’s offer, keep my information and receive no payment.",
         );
       }
       if (s.knowledge.ledger && !s.world.exploited)
         add(
           "exploit",
           "Demand 25 coins to keep the ledger secret",
-          "Threaten to expose Oren's payments unless he pays you. He will remember this.",
+          "I will threaten to expose Oren’s payments unless he pays me. He will remember this.",
         );
     }
     if (n.id === "nell") {
@@ -1888,41 +2096,41 @@ const Dialogue = {
           "hire",
           "Hire Nell · 12 coins",
           s.coins < 12
-            ? "You need 12 coins to hire her. Her wage is 3 coins per day."
-            : "She serves the public tables. Her wage is 3 coins per day.",
+            ? "I need 12 coins to hire Nell. I will also owe her 3 coins per day."
+            : "Nell will serve my public tables. I will pay her 3 coins per day.",
           s.coins < 12,
         );
       else
         add(
           "report",
           "Ask Nell what she overheard",
-          "Hear her account of conversations she was close enough to understand.",
+          "I will ask Nell to repeat conversations she was close enough to understand.",
         );
     }
     if (n.id === "cedric" && s.quest?.resolved && !s.quest.debriefed)
       add(
         "debrief",
         "Ask what happened on the expedition",
-        "Hear his full account and inspect anything he brought back.",
+        "I will hear Cedric’s full account and inspect anything he brought back.",
       );
     if (n.id === "tomas") {
       if (s.events.search) {
         add(
           "cooperate",
           "Let Tomas search the inn",
-          "Give the watch permission to look for evidence.",
+          "I will give Tomas permission to search my inn for evidence.",
         );
         add(
           "withhold",
           "Refuse the search",
-          "Do not let the watch search. Tomas will record your refusal.",
+          "I will refuse Tomas permission to search my inn. He will record my refusal.",
         );
       }
       if (s.knowledge.ledger)
         add(
           "testify",
           "Give Tomas the ledger as evidence",
-          "Show the watch the record of Oren's payments.",
+          "I will give Tomas the record of Oren’s payments.",
         );
     }
     return options;
@@ -2252,6 +2460,21 @@ const TavernArt = (() => {
       line(c, x, 575, x + 7, 568, "#e1b77a");
     }
     for (let y = 352; y < 565; y += 9) line(c, 252, y, 658, y, "#d4a3700d");
+    // Woven diamonds give the central rug a recognizable inn motif.
+    for (let x = 280; x < 650; x += 52) {
+      for (let y = 367; y < 559; y += 48) {
+        c.beginPath();
+        c.moveTo(x, y - 14);
+        c.lineTo(x + 12, y);
+        c.lineTo(x, y + 14);
+        c.lineTo(x - 12, y);
+        c.closePath();
+        c.strokeStyle = "#d3a36535";
+        c.lineWidth = 2;
+        c.stroke();
+        oval(c, x, y, 2, 2, "#e5bc7e50");
+      }
+    }
     box(c, 752, 195, 167, 132, 4, "#254d51", "#bd935a", 2);
     for (let x = 760; x < 916; x += 14) line(c, x, 201, x, 322, "#a9c3a514");
     for (const f of DATA.furniture) furniture(c, f);
@@ -2287,6 +2510,16 @@ const TavernArt = (() => {
       box(c, x, 40, 52, 10, 3, "#151f29", "#7d6848");
       box(c, x + 5, 42, 42, 6, 2, "#6a9a9c", null);
       line(c, x + 26, 42, x + 26, 48, "#d3aa71", 3);
+      c.save();
+      c.fillStyle = gradient(c, x, 49, 50, 135, ["#a9d9d02e", "#a9d9d000"]);
+      c.beginPath();
+      c.moveTo(x + 5, 51);
+      c.lineTo(x + 47, 51);
+      c.lineTo(x + 95, 183);
+      c.lineTo(x + 10, 183);
+      c.closePath();
+      c.fill();
+      c.restore();
     }
     for (let [x, y] of [
       [190, 67],
@@ -2346,6 +2579,26 @@ const TavernArt = (() => {
       line(c, x - 10, y - 13, x + 10, y - 13, "#ac8456", 3);
     }
     box(c, 444, 609, 94, 16, 3, "#48392c", "#141e25", 3);
+    // Hanging herbs and glazed jars sit against existing walls, off the paths.
+    for (const x of [575, 650]) {
+      line(c, x, 47, x, 72, "#c4a474", 2);
+      for (let j = 0; j < 5; j++) {
+        line(c, x, 61, x - 10 + j * 5, 82 + (j % 2) * 5, "#677c49", 2);
+        oval(
+          c,
+          x - 10 + j * 5,
+          78 + (j % 2) * 5,
+          4,
+          8,
+          j % 2 ? "#6d905b" : "#456847",
+        );
+      }
+    }
+    box(c, 759, 49, 38, 9, 2, "#775136");
+    for (let j = 0; j < 3; j++) {
+      box(c, 763 + j * 11, 34, 9, 15, 3, j % 2 ? "#b17146" : "#4c8b86");
+      line(c, 765 + j * 11, 36, 767 + j * 11, 44, "#ead4a77a", 2);
+    }
     for (let x = 452; x < 535; x += 12) line(c, x, 612, x, 622, "#a77a4d");
     // Edge shade keeps the center inviting without hiding navigable areas.
     let vignette = c.createRadialGradient(500, 335, 180, 500, 335, 570);
@@ -2619,21 +2872,10 @@ function startGame() {
 }
 function talk(id) {
   if (!doAct("talk", id)) return;
-  const n = Sim.npc(state, id),
-    def = DATA.npcs.find((d) => d.id === id);
+  const n = Sim.npc(state, id);
   const memories = n.memory
     .slice(-3)
-    .map(
-      (t) =>
-        "<li>" +
-        esc(
-          t.replace(
-            "You declined to share your confidence.",
-            "You chose not to share information.",
-          ),
-        ) +
-        "</li>",
-    )
+    .map((t) => "<li>" + esc(t) + "</li>")
     .join("");
   const options = Dialogue.choices(state, n)
     .map(
@@ -2650,19 +2892,19 @@ function talk(id) {
       esc(n.role) +
       "</div><h2>" +
       esc(n.name) +
-      '</h2></div></div><p class="spoken">“' +
-      esc(Dialogue.line(state, n)) +
-      '”</p><details class="person-notes"><summary>About ' +
+      '</h2></div></div><div class="speech-label">' +
       esc(n.name) +
-      "</summary><p>“" +
-      esc(def.ambition) +
-      "”</p>" +
+      ' says</div><p class="spoken">“' +
+      esc(Dialogue.line(state, n)) +
+      '”</p><details open class="person-notes"><summary>My notes about ' +
+      esc(n.name) +
+      "</summary><p>" +
+      esc(Dialogue.personalNote(n)) +
+      "</p>" +
       (n.familiar > 2
         ? '<p class="muted">Favorite order: ' + esc(n.favorite) + ".</p>"
         : "") +
-      (memories
-        ? "<h3>What " + esc(n.name) + " remembers</h3><ul>" + memories + "</ul>"
-        : "") +
+      (memories ? "<h3>What I did</h3><ul>" + memories + "</ul>" : "") +
       '</details><div class="decisions">' +
       options +
       '</div><div class="actions">' +
@@ -2705,7 +2947,7 @@ function dispatch() {
 }
 function journal(filter = "") {
   panel(
-    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}</div>`,
+    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What I know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}</div>`,
     "journal",
   );
   filterJournal(filter);
@@ -2721,11 +2963,11 @@ function filterJournal(filter) {
     entries
       .map(
         (k) =>
-          `<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map((o) => `Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join("<br>")}<br>Known to you: ${[...new Set(k.knownBy)].map(esc).join(", ")}</p></article>`,
+          `<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map((o) => `Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join("<br>")}<br>People I know have this information: ${[...new Set(k.knownBy)].map((n) => esc(n === "keeper" ? "Me" : n)).join(", ")}</p></article>`,
       )
       .join("") +
     (!entries.length
-      ? "<p>No matching notes. Begin with the people in the room.</p>"
+      ? "<p>No matching leads. My other notes are below.</p>"
       : "") +
     "<h3>People & choices</h3>" +
     state.notes
@@ -2864,12 +3106,22 @@ function person(n, isPlayer = false) {
   if (n.id === "cedric" && state.quest?.outcome === "injured")
     rect(n.x - 9, n.y - 14, 18, 4, "#e8dbb5");
   ctx.save();
+  const label = isPlayer ? state.player.name : n.name;
+  ctx.font = "600 13px system-ui";
+  const width = ctx.measureText(label).width + 16;
+  ctx.fillStyle = isPlayer ? "#294744ed" : "#18272de8";
+  ctx.beginPath();
+  ctx.roundRect(n.x - width / 2, n.y + 16, width, 21, 6);
+  ctx.fill();
+  ctx.strokeStyle = isPlayer ? "#dcb579" : "#9f957866";
+  ctx.lineWidth = 1;
+  ctx.stroke();
   ctx.shadowColor = "#111a22";
   ctx.shadowBlur = 4;
   text(
     isPlayer ? state.player.name : n.name,
     n.x,
-    n.y + 29,
+    n.y + 31,
     13,
     isPlayer ? "#ffe6ad" : "#f0dcc0",
   );
@@ -2939,8 +3191,7 @@ function draw() {
             ? `Hold E · Prepare ${st.id}`
             : `E · ${st.name}`
           : "Walk close. Listen a little longer.";
-  rect(260, 5, 480, 28, "#102020d9");
-  text(hint, 500, 24, 14, "#ead7ae");
+  $("interaction-hint").textContent = hint;
   if (state.pour > 0) {
     rect(state.player.x - 15, state.player.y + 36, 30, 3, "#272d28");
     rect(
@@ -2960,7 +3211,7 @@ function draw() {
           ? "Evening"
           : "Closing";
   $("status").innerHTML =
-    `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><br>${DATA.dayNames[state.day - 1]} &nbsp; · &nbsp; ${state.coins} coins`;
+    `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><div class="day-track" aria-hidden="true"><i style="width:${(100 * state.time) / 180}%"></i></div><span>${DATA.dayNames[state.day - 1]}</span> <strong class="coin-count">${state.coins} coins</strong>`;
   $("pause").textContent = state.paused ? "Resume" : "Pause";
   $("toast").textContent =
     state.toastTime > 0

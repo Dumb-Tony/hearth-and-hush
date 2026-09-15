@@ -300,6 +300,21 @@ const TavernArt = (() => {
       line(c, x, 575, x + 7, 568, "#e1b77a");
     }
     for (let y = 352; y < 565; y += 9) line(c, 252, y, 658, y, "#d4a3700d");
+    // Woven diamonds give the central rug a recognizable inn motif.
+    for (let x = 280; x < 650; x += 52) {
+      for (let y = 367; y < 559; y += 48) {
+        c.beginPath();
+        c.moveTo(x, y - 14);
+        c.lineTo(x + 12, y);
+        c.lineTo(x, y + 14);
+        c.lineTo(x - 12, y);
+        c.closePath();
+        c.strokeStyle = "#d3a36535";
+        c.lineWidth = 2;
+        c.stroke();
+        oval(c, x, y, 2, 2, "#e5bc7e50");
+      }
+    }
     box(c, 752, 195, 167, 132, 4, "#254d51", "#bd935a", 2);
     for (let x = 760; x < 916; x += 14) line(c, x, 201, x, 322, "#a9c3a514");
     for (const f of DATA.furniture) furniture(c, f);
@@ -335,6 +350,16 @@ const TavernArt = (() => {
       box(c, x, 40, 52, 10, 3, "#151f29", "#7d6848");
       box(c, x + 5, 42, 42, 6, 2, "#6a9a9c", null);
       line(c, x + 26, 42, x + 26, 48, "#d3aa71", 3);
+      c.save();
+      c.fillStyle = gradient(c, x, 49, 50, 135, ["#a9d9d02e", "#a9d9d000"]);
+      c.beginPath();
+      c.moveTo(x + 5, 51);
+      c.lineTo(x + 47, 51);
+      c.lineTo(x + 95, 183);
+      c.lineTo(x + 10, 183);
+      c.closePath();
+      c.fill();
+      c.restore();
     }
     for (let [x, y] of [
       [190, 67],
@@ -394,6 +419,26 @@ const TavernArt = (() => {
       line(c, x - 10, y - 13, x + 10, y - 13, "#ac8456", 3);
     }
     box(c, 444, 609, 94, 16, 3, "#48392c", "#141e25", 3);
+    // Hanging herbs and glazed jars sit against existing walls, off the paths.
+    for (const x of [575, 650]) {
+      line(c, x, 47, x, 72, "#c4a474", 2);
+      for (let j = 0; j < 5; j++) {
+        line(c, x, 61, x - 10 + j * 5, 82 + (j % 2) * 5, "#677c49", 2);
+        oval(
+          c,
+          x - 10 + j * 5,
+          78 + (j % 2) * 5,
+          4,
+          8,
+          j % 2 ? "#6d905b" : "#456847",
+        );
+      }
+    }
+    box(c, 759, 49, 38, 9, 2, "#775136");
+    for (let j = 0; j < 3; j++) {
+      box(c, 763 + j * 11, 34, 9, 15, 3, j % 2 ? "#b17146" : "#4c8b86");
+      line(c, 765 + j * 11, 36, 767 + j * 11, 44, "#ead4a77a", 2);
+    }
     for (let x = 452; x < 535; x += 12) line(c, x, 612, x, 622, "#a77a4d");
     // Edge shade keeps the center inviting without hiding navigable areas.
     let vignette = c.createRadialGradient(500, 335, 180, 500, 335, 570);

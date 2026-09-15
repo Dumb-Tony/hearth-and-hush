@@ -244,6 +244,7 @@ const Sim = (() => {
       n.y = 597;
     }
     s.heard = {};
+    s.staff.listening = {};
     s.events["room" + s.day] = false;
   }
   function nextDay(s) {

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A physical fantasy tavern RPG. Pour a drink, overhear a confidence, and decide who learns what."><title>Hearth & Hush — provisional tavern RPG</title><style>* {
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A physical fantasy tavern RPG. Pour a drink, overhear a secret, and decide who learns what."><title>Hearth & Hush — provisional tavern RPG</title><style>* {
   box-sizing: border-box;
 }
 body {
@@ -281,7 +281,126 @@ footer {
     min-height: 28px;
   }
 }
-</style></head><body><header><div><small>Rookcross • a working inn</small><h1>HEARTH & HUSH</h1></div><div id="status" class="status"></div><div class="tools"><button id="pause" onclick="pause()">Pause</button><button onclick="journal()">Journal · J</button><button id="sound" onclick="toggleAmbience()">Sound off</button><button onclick="settings()">Settings</button></div></header><main><div id="stage"><canvas id="game" width="1000" height="660" aria-label="Living tavern. Use WASD or arrow keys to move and E to interact."></canvas><div id="caption" aria-live="polite"></div><button id="touch" onclick="interact()">Interact</button></div><div id="toast" role="status"></div><footer><span><kbd>WASD</kbd> move · <kbd>E</kbd> interact / hold to pour · <kbd>Space</kbd> pause · <kbd>J</kbd> journal</span><span>Provisional codename · standalone vertical slice</span></footer></main><div id="overlay"><section id="panel" role="dialog" aria-label="Innkeeper interaction"></section></div><script>/* Stable content IDs are the migration boundary for a later C# simulation. */
+body {
+  background: radial-gradient(ellipse at 50% 10%, #26383b, #111b25 70%);
+  color: #f1dec0;
+}
+header {
+  border-bottom: 1px solid #c3985230;
+  margin-bottom: 9px;
+}
+h1 {
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #edc990;
+  text-shadow: 0 3px 0 #0004;
+}
+.tools button {
+  background: linear-gradient(#3b4d4e, #24373f);
+  border-color: #708078;
+  border-radius: 7px;
+  box-shadow: 0 3px 0 #0c1920;
+}
+#stage {
+  border: 2px solid #977448;
+  border-radius: 15px;
+  box-shadow:
+    0 0 0 5px #18262d,
+    0 25px 70px #050d17a0;
+}
+#panel {
+  background: linear-gradient(135deg, #2d4246, #1c2b35);
+  border: 2px solid #a38154;
+  box-shadow:
+    0 0 0 5px #14222ac0,
+    0 25px 90px #0009;
+}
+#panel h2 {
+  font-weight: bold;
+  color: #f4d59e;
+}
+#panel .spoken {
+  font-size: 20px;
+  line-height: 1.6;
+  color: #f3e4ca;
+  margin-top: 15px;
+}
+.character-head {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.character-head canvas {
+  width: 100px;
+  height: 106px;
+  flex: none;
+}
+.character-head h2 {
+  margin: 5px 0 !important;
+}
+.person-notes {
+  font: 14px system-ui;
+  line-height: 1.6;
+  color: #c7d1c5;
+  border-top: 1px solid #80918255;
+  border-bottom: 1px solid #80918255;
+  padding: 10px 0;
+}
+.person-notes summary {
+  cursor: pointer;
+  color: #debc82;
+}
+.person-notes li {
+  margin: 5px 0;
+}
+.decisions {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.decision {
+  border-left: 3px solid #bb9356;
+  padding-left: 12px;
+}
+.decision button {
+  background: linear-gradient(#51625b, #364b48);
+  text-align: left;
+  font: 600 15px system-ui;
+}
+.decision p {
+  font: 13px/1.5 system-ui !important;
+  margin: 6px 0 0 !important;
+  color: #bccbbc !important;
+}
+#caption {
+  background: linear-gradient(#263d40f5, #192b35fa);
+  box-shadow: 0 5px 18px #0008;
+  border: 1px solid #cfa567;
+  border-radius: 10px;
+  text-align: left;
+  padding: 12px 18px;
+  font-size: 16px;
+  left: 17%;
+  right: 17%;
+}
+#toast {
+  color: #dfc89d;
+}
+.eyebrow {
+  color: #c8b68f;
+}
+button {
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+button:hover {
+  transform: translateY(-1px);
+}
+main {
+  max-width: min(1260px, calc((100vh - 180px) * 1.51515 + 40px));
+}
+</style></head><body><header><div><small>Rookcross • a working inn</small><h1>HEARTH & HUSH</h1></div><div id="status" class="status"></div><div class="tools"><button id="pause" onclick="pause()">Pause</button><button onclick="journal()">Journal · J</button><button id="sound" onclick="toggleAmbience()">Sound off</button><button onclick="settings()">Settings</button></div></header><main><div id="stage"><canvas id="game" width="1000" height="660" aria-label="Living tavern. Use WASD or arrow keys to move and E to interact."></canvas><div id="caption" aria-live="polite"></div><button id="touch" onclick="interact()">Interact</button></div><div id="toast" role="status"></div><footer><span><kbd>WASD</kbd> move · <kbd>E</kbd> interact / hold to pour · <kbd>Space</kbd> pause · <kbd>J</kbd> journal</span><span>Provisional codename · standalone vertical slice</span></footer></main><div id="overlay"><section id="panel" role="dialog" aria-label="Innkeeper interaction"></section></div><script>/* Stable-ID character, story and layout content. */
 const DATA = {
   npcs: [
     {
@@ -312,8 +431,10 @@ const DATA = {
       y: 240,
       arrival: 18,
       depart: 162,
-      ambition: "One day I will owe nobody anything. Not even a favor.",
-      intro: "A secret is like a spare key. You should know who has a copy.",
+      ambition:
+        "I am saving enough money to stop taking jobs for people I do not trust.",
+      intro:
+        "I scout the roads around Rookcross. If you hear about trouble out there, tell me. I may know someone who can help.",
       faction: "Reed Knives",
     },
     {
@@ -327,9 +448,9 @@ const DATA = {
       y: 265,
       arrival: 0,
       depart: 172,
-      ambition: "A boat. Nothing grand. Just something that belongs to me.",
+      ambition: "I want to buy a small boat. A steady wage here would help.",
       intro:
-        "Your aunt used to say: watch the hands, not the smile. Mine mostly carry plates.",
+        "I used to serve tables here for your aunt. If you need help, I would like the job.",
       faction: "Rookcross locals",
     },
     {
@@ -344,9 +465,9 @@ const DATA = {
       arrival: 28,
       depart: 145,
       ambition:
-        "The road must turn a profit. Good intentions do not shoe horses.",
+        "My drivers need wages, and the horses need feed. I cannot keep losing shipments.",
       intro:
-        "Three missing wagons. Bandits, obviously. Best let the merchants handle it.",
+        "Three of my wagons are missing on the Blackwood road. I suspect bandits, but the watch has found no proof.",
       faction: "Merchant compact",
     },
     {
@@ -360,8 +481,10 @@ const DATA = {
       y: 350,
       arrival: 34,
       depart: 168,
-      ambition: "A wage on time. And one report that does not say probably.",
-      intro: "If somebody says obviously, ask them how they know.",
+      ambition:
+        "I need evidence I can put in a report. Rumors alone will not get those wagons back.",
+      intro:
+        "I am investigating the missing wagons. If someone tells you what happened, ask whether they saw it themselves.",
       faction: "Crown watch",
     },
     {
@@ -375,8 +498,10 @@ const DATA = {
       y: 510,
       arrival: 45,
       depart: 159,
-      ambition: "The chapel is full of people the road has forgotten.",
-      intro: "A hot meal is a perfectly respectable prayer.",
+      ambition:
+        "We need blankets and food at the chapel. The loss of trade has left several families without work.",
+      intro:
+        "I look after the chapel. We are sheltering families who have lost work since the wagons stopped coming.",
       faction: "Hearth church",
     },
     {
@@ -390,8 +515,10 @@ const DATA = {
       y: 510,
       arrival: 12,
       depart: 160,
-      ambition: "Teach the boy to come home. Glory can look after itself.",
-      intro: "Rope, food, a second pair of eyes. The heroic essentials.",
+      ambition:
+        "I want Cedric to survive his first jobs. He is brave, but he is still learning.",
+      intro:
+        "Cedric wants to take work on the road. I am trying to teach him how to get home in one piece.",
       faction: "Road company",
     },
     {
@@ -405,8 +532,10 @@ const DATA = {
       y: 110,
       arrival: 55,
       depart: 174,
-      ambition: "This inn appears in three treaties. None mention why.",
-      intro: "My familiar is not a second guest. It is a professional expense.",
+      ambition:
+        "I found this inn mentioned in three old treaties. I want to know why people kept meeting here.",
+      intro:
+        "I am staying in room two with my magical pet. Please tell me you are not charging it for a separate bed.",
       faction: "Mages register",
     },
   ],
@@ -442,7 +571,6 @@ const DATA = {
       kind: "Sensitive testimony",
     },
   },
-  // Overlapping windows are deliberate. Ordinary lines are allowed to disappear.
   talks: [
     {
       id: "wagons",
@@ -475,7 +603,7 @@ const DATA = {
       b: "oren",
       whisper: true,
       fragment: "…paid to turn…",
-      line: "Mira: They were paid to turn at the tollhouse. Oren: Lower your voice. You were paid to forget.",
+      line: "Mira: You paid the drivers to bring the wagons to the tollhouse. Oren: Keep your voice down. I paid you not to tell anyone.",
       rumor: "diversion",
     },
     {
@@ -487,7 +615,7 @@ const DATA = {
       b: "nell",
       whisper: true,
       fragment: "…the Knives expect…",
-      line: "Mira: The Reed Knives expect road news. Nell: And Cedric thinks you only scout for him.",
+      line: "Mira: The Reed Knives want me to tell them about valuable shipments. Nell: Does Cedric know you work for them?",
       rumor: "knives",
     },
     {
@@ -498,7 +626,7 @@ const DATA = {
       a: "cedric",
       b: "nell",
       fragment: "…blue glass…",
-      line: "Cedric: My sister made you a bead. It is not quite round. Nell: Neither is the moon, up close. Tell her I love it.",
+      line: "Cedric: My sister made you this blue glass bead. Sorry it is a bit uneven. Nell: She made it herself? Tell her I love it.",
     },
     {
       id: "soup",
@@ -507,8 +635,8 @@ const DATA = {
       end: 152,
       a: "aldous",
       b: "bram",
-      fragment: "…a respectable prayer…",
-      line: "Aldous: I prayed for dinner. Bram: I ordered soup. Aldous: Different traditions. Same excellent result.",
+      fragment: "…a quiet evening…",
+      line: "Aldous: It is good to have a quiet evening for once. Bram: And hot soup. Do not forget the soup.",
     },
     {
       id: "seal",
@@ -518,7 +646,7 @@ const DATA = {
       a: "ivo",
       b: "aldous",
       fragment: "…same carved mark…",
-      line: "Ivo: That hearth mark is on the Treaty of Ash. Aldous: Your aunt kept names, not recipes, in that ledger.",
+      line: "Ivo: This hearth carving also appears on the Treaty of Ash. Aldous: Your aunt kept a list of people who met here. Her old ledger might help.",
       rumor: "carving",
     },
     {
@@ -529,111 +657,239 @@ const DATA = {
       a: "bram",
       b: "tomas",
       fragment: "…under the beard…",
-      line: "Tomas: Regulations say no concealed weapons. Bram: If I remove everything under my beard, we will be here until spring.",
+      line: "Tomas: I need to check whether you are carrying a weapon. Bram: There is an axe hanging from my belt, Tomas. You can stop looking in my beard.",
     },
   ],
   walls: [
-    { x: 710, y: 35, w: 18, h: 155 },
-    { x: 710, y: 300, w: 18, h: 38 },
-    { x: 710, y: 338, w: 235, h: 18 },
-    { x: 710, y: 35, w: 235, h: 14 },
-    { x: 728, y: 179, w: 65, h: 12 },
-    { x: 870, y: 179, w: 75, h: 12 },
-    { x: 35, y: 185, w: 175, h: 18 },
-    { x: 295, y: 185, w: 100, h: 18 },
+    {
+      x: 710,
+      y: 35,
+      w: 18,
+      h: 155,
+    },
+    {
+      x: 710,
+      y: 300,
+      w: 18,
+      h: 38,
+    },
+    {
+      x: 710,
+      y: 338,
+      w: 235,
+      h: 18,
+    },
+    {
+      x: 710,
+      y: 35,
+      w: 235,
+      h: 14,
+    },
+    {
+      x: 728,
+      y: 179,
+      w: 65,
+      h: 12,
+    },
+    {
+      x: 870,
+      y: 179,
+      w: 75,
+      h: 12,
+    },
+    {
+      x: 35,
+      y: 185,
+      w: 175,
+      h: 18,
+    },
+    {
+      x: 295,
+      y: 185,
+      w: 100,
+      h: 18,
+    },
   ],
   furniture: [
-    { x: 95, y: 230, w: 75, h: 160, type: "bar" },
-    { x: 330, y: 375, w: 100, h: 50, type: "table" },
-    { x: 530, y: 375, w: 100, h: 50, type: "table" },
-    { x: 335, y: 540, w: 125, h: 40, type: "table" },
-    { x: 640, y: 490, w: 105, h: 45, type: "table" },
-    { x: 790, y: 260, w: 95, h: 40, type: "table" },
-    { x: 805, y: 65, w: 115, h: 55, type: "bed" },
-    { x: 240, y: 65, w: 120, h: 65, type: "desk" },
+    {
+      x: 95,
+      y: 230,
+      w: 75,
+      h: 160,
+      type: "bar",
+    },
+    {
+      x: 330,
+      y: 375,
+      w: 100,
+      h: 50,
+      type: "table",
+    },
+    {
+      x: 530,
+      y: 375,
+      w: 100,
+      h: 50,
+      type: "table",
+    },
+    {
+      x: 335,
+      y: 540,
+      w: 125,
+      h: 40,
+      type: "table",
+    },
+    {
+      x: 640,
+      y: 490,
+      w: 105,
+      h: 45,
+      type: "table",
+    },
+    {
+      x: 790,
+      y: 260,
+      w: 95,
+      h: 40,
+      type: "table",
+    },
+    {
+      x: 805,
+      y: 65,
+      w: 115,
+      h: 55,
+      type: "bed",
+    },
+    {
+      x: 240,
+      y: 65,
+      w: 120,
+      h: 65,
+      type: "desk",
+    },
   ],
   stations: [
-    { id: "ale", name: "Ale cask", x: 77, y: 255 },
-    { id: "wine", name: "Wine cask", x: 77, y: 305 },
-    { id: "tea", name: "Tea kettle", x: 77, y: 355 },
-    { id: "stew", name: "Stew pot", x: 120, y: 440 },
-    { id: "board", name: "Letters & expedition board", x: 280, y: 153 },
-    { id: "hearth", name: "Carved hearth", x: 510, y: 82 },
-    { id: "room", name: "Guest room", x: 875, y: 160 },
-    { id: "bed", name: "Close the inn", x: 105, y: 110 },
+    {
+      id: "ale",
+      name: "Ale cask",
+      x: 77,
+      y: 255,
+    },
+    {
+      id: "wine",
+      name: "Wine cask",
+      x: 77,
+      y: 305,
+    },
+    {
+      id: "tea",
+      name: "Tea kettle",
+      x: 77,
+      y: 355,
+    },
+    {
+      id: "stew",
+      name: "Stew pot",
+      x: 120,
+      y: 440,
+    },
+    {
+      id: "board",
+      name: "Letters & expedition board",
+      x: 280,
+      y: 153,
+    },
+    {
+      id: "hearth",
+      name: "Carved hearth",
+      x: 510,
+      y: 82,
+    },
+    {
+      id: "room",
+      name: "Guest room",
+      x: 875,
+      y: 160,
+    },
+    {
+      id: "bed",
+      name: "Close the inn",
+      x: 105,
+      y: 110,
+    },
   ],
   daily: {
     cedric: [
-      "Bram checked my boots before my sword. I think that was an insult.",
-      "My sister writes as if glassmaking is wizardry. Perhaps it is.",
-      "If I go, keep my chair? Just until I come back.",
-      "Nell kept the blue bead. She put it where the light catches it.",
-      "You can practice being brave. I am less certain about being sensible.",
-      "There is a difference between a story and the part you were actually there for.",
-      "When my sister asks what I did, I want to have something worth telling.",
+      "Bram checked my boots before my sword. Apparently blisters end more journeys than bandits do.",
+      "My sister is learning to make glass. She sent me a bead she made herself.",
+      "If I take a job on the road, will you keep my usual chair free? I know that sounds silly.",
+      "I gave Nell the blue bead my sister made. She hung it by a window. I think she liked it.",
+      "Bram says I need to practice checking my supplies. I would rather practice with my sword, but he has a point.",
+      "People leave the boring parts out of adventure stories. Nobody mentions wet socks.",
+      "My sister wants a letter. I am trying to think of something that will impress her without making her worry.",
     ],
     mira: [
-      "You can tell a lot about someone by which door they use.",
-      "Cedric thinks I never get scared. It would be unkind to correct him.",
-      "I do not like owing favors. That does not mean I have stopped.",
-      "A quiet room. Imagine being paid for that.",
-      "I have done things for people I would not invite to dinner.",
-      "He asked who knew. I should have had a better answer.",
-      "Next week I might try earning money honestly. Do not write that down.",
+      "I like the booth. It is easier to talk there without the whole room listening.",
+      "Cedric thinks I never get frightened. I check every bridge before I cross it. That is how frightened I get.",
+      "A few people helped me when I was short of money. Now they keep asking for favors.",
+      "It is quiet tonight. I might finish a drink without somebody offering me a job.",
+      "Some of my clients are unpleasant. Unfortunately, they tend to pay on time.",
+      "Cedric keeps asking about the people I work for. I have been avoiding the conversation.",
+      "I would like to take a straightforward job next week. Find a lost dog, perhaps. Something that does not involve lying.",
     ],
     nell: [
-      "The table nearest the fire rocks. Your aunt put a love letter under the short leg.",
-      "Cedric stares at the door every time it opens. He says he is checking the weather.",
-      "Oren paid with exact change. A man who counts everything is hiding a total.",
-      "The bead is not round. I like it better that way.",
-      "Boats are expensive. Apparently the water is included.",
-      "Sometimes all you can do is put the right cup in front of someone.",
-      "The room feels a little less empty than it did on Monday.",
+      "The table nearest the fire wobbles. Your aunt folded an old letter under the short leg. I have left it there.",
+      "Cedric looks toward the door every time someone arrives. I think he is hoping to be offered work.",
+      "Oren counted his change twice. If he hires anyone to find those wagons, get the fee in advance.",
+      "Cedric gave me a glass bead his sister made. It is a little uneven, but the blue is lovely.",
+      "I checked the price of a boat. I will be saving for a while yet.",
+      "If someone comes back hurt, send for Aldous. I can bring them food while we wait.",
+      "It is good to see people using the inn again. Your aunt would have liked that.",
     ],
     oren: [
-      "You will need reliable suppliers. I am quite reliable when paid.",
-      "Rookcross used to have six carriers. Now we have three and a very optimistic sign.",
-      "I prefer wine in a quiet corner. Business carries enough noise.",
-      "A day without an invoice is a day wasted. You disagree? How restful.",
-      "People call it greed when they dislike the price.",
-      "I have kept this town fed through worse winters than you remember.",
-      "I hope we understand each other better now.",
+      "You will need regular deliveries of food and ale. I can arrange them, provided you pay on time.",
+      "Rookcross used to have six carriers. Half have moved away because there is not enough work.",
+      "A cup of wine in the booth, if you can. I need a quiet place to go through these accounts.",
+      "I have spent the afternoon checking unpaid invoices. I would much rather be drinking.",
+      "I know people complain about my prices. I still have drivers and horses to pay for.",
+      "I have brought food into Rookcross through some very bad winters. People seem to forget that.",
+      "We will still need supplies next week, whatever happens with the wagons.",
     ],
     tomas: [
-      "I have arrested the same goat twice. I am beginning to suspect contempt.",
-      "The wheel tracks turned willingly toward the tollhouse. That is a lead, not proof.",
-      "They want a culprit by Friday. I would settle for a fact.",
-      "Bram says his beard is private property. This complicates searches.",
-      "My deputy has patched the same boot three times. The Crown remembers us at tax time.",
-      "There has been a complaint about that tollhouse. I need to know what you can actually support.",
-      "A useful witness knows the difference between heard and saw.",
+      "I had to remove a goat from the market again. Same goat. Same vegetable stall.",
+      "The wagon tracks turn toward the old tollhouse. I found no sign of a fight at the junction.",
+      "My captain wants an arrest. I would prefer to find out what happened first.",
+      "Bram refuses to take his hat off for searches. Apparently that is an old argument with the watch.",
+      "My deputy has patched the same boot three times. We have been waiting two months for new equipment.",
+      "I am checking reports about the old tollhouse. Tell me what you saw, and what you only heard from someone else.",
+      "If you give me a name, tell me where you heard it. I need to be able to check the story.",
     ],
     aldous: [
-      "A hot meal is a perfectly respectable prayer.",
-      "Three displaced families in the chapel. I have stopped counting spare blankets.",
-      "Ivo thinks the carving is a seal. Your aunt said it was a reminder.",
-      "Nobody needs rescuing tonight. Sit down before that changes.",
-      "There is room at the chapel. There is always room, somehow.",
-      "Send the injured to me before you send them for another drink.",
-      "You cannot mend a road with kindness. But you can make it worth returning to.",
+      "People who arrive at the chapel hungry get a meal before a sermon. It seems only fair.",
+      "We have three families sleeping in the chapel. I am looking for spare blankets.",
+      "Ivo asked about the carving on your hearth. Your aunt used to keep notes about the people who met here.",
+      "Nobody needs my help just now. I intend to sit by the fire and enjoy that.",
+      "We made room for another family at the chapel. It is crowded, but they are out of the rain.",
+      "If an adventurer comes back injured, send someone for me. I keep dressings ready.",
+      "A hot meal will not repair the trade road, but it will help the people waiting for work.",
     ],
     bram: [
-      "Rope, food, a second pair of eyes. The heroic essentials.",
-      "The north bridge is rotten. Rope and the ridge. Tell the boy.",
-      "He asked how to look fearless. I told him to look behind him occasionally.",
-      "Soup. A chair. No one trying to bite me. I have had worse adventures.",
-      "An empty chair is louder than a full room, some days.",
-      "Coming home is a skill. I wish somebody had told me that sooner.",
-      "The boy listens more now. That may save him.",
+      "A rope and dry socks. Those are the things a new adventurer always forgets.",
+      "The north bridge is rotten. Anyone heading that way should take rope and use the ridge path.",
+      "Cedric asked how to look fearless. I told him to check behind him before posing with his sword.",
+      "Hot soup, a sturdy chair, and no wolves. This is a perfectly good evening.",
+      "I still notice when a regular is away. I like knowing people have made it home.",
+      "I wish someone had taught me to turn back when I was Cedric's age. It would have saved me a few scars.",
+      "Cedric is starting to listen when I talk about supplies. I am taking that as progress.",
     ],
     ivo: [
-      "My familiar is a professional expense. Not a second guest.",
-      "It is only purple because it touched the wine. Do not let it touch the soup.",
-      "The Treaty of Ash has this inn carved into its seal. Peculiar.",
-      "No experiments today. The familiar has demanded a holiday.",
-      "Your aunt wrote names beside dates. Not debts. Meetings.",
-      "The stones beneath the hearth are older than the building. I said older, not haunted.",
-      "Three treaties. One inn. We should have another look next week.",
+      "My magical pet sleeps in my coat pocket. It does not need its own bed.",
+      "My pet knocked over a cup of wine. That is why its paws are purple. I will pay for the cleaning.",
+      "I found a drawing of the hearth carving on a copy of the Treaty of Ash. I wonder who put it there first.",
+      "I am taking a day off from experiments. My pet has been hiding whenever I open the reagent case.",
+      "Your aunt's old ledger lists names and meeting dates. It does not look like a book of unpaid bills.",
+      "Some of the stones under the hearth look older than the inn. I would like to examine them when the fire is out.",
+      "I will bring my copies of the treaties next week. Perhaps we can work out who met here.",
     ],
   },
   dayNames: [
@@ -1244,12 +1500,32 @@ const Sim = (() => {
       return true;
     }
     if (verb === "withhold") {
-      if (id === "tomas" && s.events.search)
+      const search = id === "tomas" && s.events.search;
+      const wagonRequest =
+        s.knowledge.wagons &&
+        ((id === "mira" && !s.world.leak) || (id === "oren" && !s.world.sold));
+      if (!search && !wagonRequest) return false;
+      if (search)
         s.world.guard =
           "You declined the watch search; Tomas left without your testimony";
-      n.memory.push("You declined to share your confidence.");
-      note(s, "You kept your confidence from " + n.name + ".");
-      say(s, n.name + ": Fair enough. I will remember that.");
+      n.memory.push(
+        search
+          ? "You refused to let me search the inn."
+          : "You refused to tell me what you know about the missing wagons.",
+      );
+      note(
+        s,
+        search
+          ? "You refused Tomas permission to search the inn."
+          : "You chose not to share the wagon information with " + n.name + ".",
+      );
+      say(
+        s,
+        n.name +
+          (search
+            ? ": All right. I will record that you refused the search."
+            : ": All right. Keep it to yourself, then."),
+      );
       return true;
     }
     if (verb === "exploit") {
@@ -1450,7 +1726,7 @@ const Sim = (() => {
                 : "An expedition is still on the road."
         : "No expedition left your door this week.",
       s.world.leak
-        ? "Mira passed your confidence to the Reed Knives. Information kept moving after you let it go."
+        ? "Mira told the Reed Knives what you said about the wagons."
         : "Mira never received the wagon trail from you.",
       s.world.trade + ".",
       s.debt
@@ -1567,6 +1843,703 @@ const Sim = (() => {
 })();
 if (typeof module !== "undefined") module.exports = Sim;
 
+// Player-facing choices name the information or action explicitly. Neutral
+// conversation exits never count as refusing a request or sharing a secret.
+const Dialogue = {
+  choices(s, n) {
+    const options = [];
+    const add = (verb, label, detail, disabled = false) =>
+      options.push({ verb, label, detail, disabled });
+    if (n.id === "mira" && s.knowledge.wagons && !s.world.leak) {
+      add(
+        "share",
+        "Tell Mira about the missing wagons",
+        "She will learn what you know. She may tell other people.",
+      );
+      add(
+        "withhold",
+        "Don't tell Mira about the wagons",
+        "Tell her you are keeping this information private.",
+      );
+    }
+    if (n.id === "oren") {
+      if (s.knowledge.wagons && !s.world.sold) {
+        add(
+          "sell",
+          "Sell your wagon information · 15 coins",
+          "Oren pays you for what you know about the missing shipment.",
+        );
+        add(
+          "withhold",
+          "Don't sell Oren the information",
+          "Refuse his offer. You keep the information and receive no payment.",
+        );
+      }
+      if (s.knowledge.ledger && !s.world.exploited)
+        add(
+          "exploit",
+          "Demand 25 coins to keep the ledger secret",
+          "Threaten to expose Oren's payments unless he pays you. He will remember this.",
+        );
+    }
+    if (n.id === "nell") {
+      if (!s.staff.hired)
+        add(
+          "hire",
+          "Hire Nell · 12 coins",
+          s.coins < 12
+            ? "You need 12 coins to hire her. Her wage is 3 coins per day."
+            : "She serves the public tables. Her wage is 3 coins per day.",
+          s.coins < 12,
+        );
+      else
+        add(
+          "report",
+          "Ask Nell what she overheard",
+          "Hear her account of conversations she was close enough to understand.",
+        );
+    }
+    if (n.id === "cedric" && s.quest?.resolved && !s.quest.debriefed)
+      add(
+        "debrief",
+        "Ask what happened on the expedition",
+        "Hear his full account and inspect anything he brought back.",
+      );
+    if (n.id === "tomas") {
+      if (s.events.search) {
+        add(
+          "cooperate",
+          "Let Tomas search the inn",
+          "Give the watch permission to look for evidence.",
+        );
+        add(
+          "withhold",
+          "Refuse the search",
+          "Do not let the watch search. Tomas will record your refusal.",
+        );
+      }
+      if (s.knowledge.ledger)
+        add(
+          "testify",
+          "Give Tomas the ledger as evidence",
+          "Show the watch the record of Oren's payments.",
+        );
+    }
+    return options;
+  },
+  line(s, n) {
+    if (n.id === "mira" && s.world.leak)
+      return "I asked my contacts about those wagons. I told them what you told me. I thought they could help.";
+    if (n.id === "oren" && s.world.exploited)
+      return "You have your money. Keep that ledger away from the watch. I will not forget this.";
+    if (n.id === "oren" && s.world.sold)
+      return "I paid you for that information about the wagons. Please do not pass it to the watch as well.";
+    if (n.id === "tomas" && s.events.search)
+      return "I am investigating the old tollhouse. May I search the inn for evidence? You can refuse, but I will record that in my report.";
+    if (n.id === "cedric" && s.quest?.resolved)
+      return (
+        s.quest.returnLine ||
+        "I am back from the tollhouse. Let me tell you what happened."
+      );
+    if (n.id === "bram" && n.familiar >= 2 && !s.quest?.resolved)
+      return "The north bridge is rotten. Take rope and use the ridge path instead. If the crossing looks unsafe, turn back.";
+    if (n.id === "tomas" && n.familiar >= 2)
+      return "The wagon tracks turn toward the old tollhouse. I found no sign of a fight at the junction. I still need to find out why they went that way.";
+    const def = DATA.npcs.find((d) => d.id === n.id);
+    return n.familiar > 1 ? DATA.daily[n.id][s.day - 1] : def.intro;
+  },
+};
+
+// Stylized, shaded canvas art. The drawing uses the simulation's existing
+// footprints: furniture height is visual and never changes walkable space.
+const TavernArt = (() => {
+  let roomCache;
+  function box(c, x, y, w, h, r, fill, stroke = "#211b20", lw = 2) {
+    c.beginPath();
+    c.roundRect(x, y, w, h, r);
+    c.fillStyle = fill;
+    c.fill();
+    if (stroke) {
+      c.strokeStyle = stroke;
+      c.lineWidth = lw;
+      c.stroke();
+    }
+  }
+  function oval(c, x, y, rx, ry, fill, stroke = null) {
+    c.beginPath();
+    c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    c.fillStyle = fill;
+    c.fill();
+    if (stroke) {
+      c.strokeStyle = stroke;
+      c.lineWidth = 1.6;
+      c.stroke();
+    }
+  }
+  function line(c, x, y, x2, y2, color, width = 1) {
+    c.strokeStyle = color;
+    c.lineWidth = width;
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x2, y2);
+    c.stroke();
+  }
+  function gradient(c, x, y, w, h, colors) {
+    let g = c.createLinearGradient(x, y, x + w, y + h);
+    colors.forEach((v, i) => g.addColorStop(i / (colors.length - 1), v));
+    return g;
+  }
+  function shadow(c, x, y, w, h) {
+    c.save();
+    c.filter = "blur(7px)";
+    oval(c, x, y, w, h, "#090b1480");
+    c.restore();
+  }
+  function glow(c, x, y, r, color) {
+    let g = c.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, color);
+    g.addColorStop(1, "#ffbe6500");
+    c.fillStyle = g;
+    c.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  function mug(c, x, y) {
+    oval(c, x + 5, y - 3, 4, 4, "#a99770", "#392f29");
+    box(
+      c,
+      x - 5,
+      y - 8,
+      9,
+      12,
+      2,
+      gradient(c, x - 5, y, 9, 0, ["#906842", "#dac08b", "#6a4734"]),
+    );
+    oval(c, x - 0.5, y - 8, 4, 2, "#f1ddab");
+  }
+  function candle(c, x, y) {
+    oval(c, x, y + 2, 8, 4, "#bd9153", "#49372c");
+    box(c, x - 2, y - 10, 4, 11, 1, "#e6ce94", null);
+    oval(c, x, y - 13, 2.5, 4, "#ffdd7c");
+    glow(c, x, y - 12, 28, "#ffbd5433");
+  }
+  function wood(c, x, y, w, h) {
+    box(
+      c,
+      x,
+      y,
+      w,
+      h,
+      5,
+      gradient(c, x, y, 0, h, ["#b6834d", "#876039", "#62432d"]),
+    );
+    for (let i = 1; i < 4; i++) {
+      let yy = y + (h * i) / 4;
+      line(c, x + 5, yy, x + w - 5, yy, "#49312080");
+      line(c, x + 8, yy + 1, x + w - 8, yy + 1, "#dfb16c30");
+    }
+    for (let i = 0; i < 5; i++) {
+      c.strokeStyle = "#e4b87525";
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(x + 8, y + 5 + i * 6);
+      c.bezierCurveTo(
+        x + w * 0.3,
+        y + i * 6 - 2,
+        x + w * 0.55,
+        y + i * 6 + 13,
+        x + w - 8,
+        y + 7 + i * 6,
+      );
+      c.stroke();
+    }
+  }
+  function furniture(c, f) {
+    let { x, y, w, h, type } = f;
+    shadow(c, x + w / 2 + 8, y + h * 0.7 + 13, w * 0.58, h * 0.6);
+    for (let xx of [x + 9, x + w - 17]) {
+      box(c, xx, y + h - 10, 8, 18, 2, "#392922");
+      line(c, xx + 2, y + h - 6, xx + 2, y + h + 6, "#a17144");
+    }
+    box(c, x, y + 2, w, h, 5, "#402c26");
+    wood(c, x, y - 9, w, h);
+    if (type === "table") {
+      for (let xx of [x + 15, x + w - 27]) {
+        box(c, xx, y - 23, 21, 10, 3, "#714632");
+        box(c, xx, y + h + 7, 21, 9, 3, "#714632");
+      }
+      oval(c, x + w * 0.55, y + 11, 12, 7, "#d9c8a0", "#6a513a");
+      oval(c, x + w * 0.55, y + 10, 8, 4, "#b69862");
+      mug(c, x + 20, y + 14);
+      mug(c, x + w - 17, y + 23);
+      candle(c, x + w * 0.7, y + 9);
+    } else if (type === "bed") {
+      box(c, x + 8, y - 4, w - 16, h - 10, 7, "#bc9c78");
+      box(
+        c,
+        x + 34,
+        y - 3,
+        w - 43,
+        h - 12,
+        5,
+        gradient(c, x, y, w, 0, ["#326e73", "#5b9890", "#28535e"]),
+      );
+      for (let i = 0; i < 3; i++)
+        line(
+          c,
+          x + 47 + i * 18,
+          y + 2,
+          x + 42 + i * 18,
+          y + h - 20,
+          "#a5c3a52b",
+          2,
+        );
+      box(c, x + 9, y, 24, h - 23, 7, "#eddbb5", "#846950");
+      line(c, x + 13, y + 3, x + 28, y + 3, "#fff2d0", 2);
+    } else if (type === "desk") {
+      for (let i = 0; i < 5; i++) {
+        box(
+          c,
+          x + 9 + i * 13,
+          y - 4,
+          10,
+          26,
+          2,
+          ["#447f77", "#a75d48", "#c19353"][i % 3],
+        );
+        line(c, x + 12 + i * 13, y + 2, x + 12 + i * 13, y + 17, "#edd6a670");
+      }
+      box(c, x + w - 48, y + 20, 32, 19, 2, "#ecd5a1", "#72583b", 1);
+      for (let j = 0; j < 3; j++)
+        line(
+          c,
+          x + w - 43,
+          y + 25 + j * 4,
+          x + w - 24,
+          y + 25 + j * 4,
+          "#8f7858",
+        );
+      candle(c, x + w - 15, y + 3);
+    } else {
+      for (let i = 0; i < 5; i++) {
+        let yy = y + 15 + i * 27;
+        oval(c, x + w * 0.7, yy, 8, 4, "#bea273");
+        mug(c, x + w * 0.7, yy);
+      }
+      line(c, x + w - 9, y + 4, x + w - 9, y + h - 16, "#e6b77460", 3);
+    }
+  }
+  function barrel(c, x, y, tea = false) {
+    shadow(c, x + 5, y + 7, 22, 15);
+    if (tea) {
+      oval(
+        c,
+        x,
+        y,
+        20,
+        16,
+        gradient(c, x - 20, y - 15, 40, 25, ["#c2ba92", "#657c78", "#354750"]),
+        "#202d33",
+      );
+      box(c, x - 7, y - 15, 14, 5, 2, "#bcbb98");
+      line(c, x + 14, y - 3, x + 27, y - 7, "#a5b39e", 5);
+    } else {
+      box(
+        c,
+        x - 18,
+        y - 15,
+        36,
+        35,
+        11,
+        gradient(c, x - 18, y, 36, 0, [
+          "#483426",
+          "#ac7941",
+          "#765037",
+          "#3d2d27",
+        ]),
+      );
+      for (let xx = -10; xx < 15; xx += 8)
+        line(c, x + xx, y - 12, x + xx, y + 16, "#3a29286b");
+      for (let yy of [-8, 10])
+        box(c, x - 18, y + yy, 36, 4, 2, "#525b57", "#292c2e", 1);
+      oval(c, x, y - 14, 17, 7, "#a27843", "#332923");
+      oval(c, x, y - 14, 12, 4, "#735431");
+    }
+    box(c, x + 14, y - 2, 12, 5, 2, "#c9a658");
+    oval(c, x + 25, y + 1, 3, 3, "#e7c37f");
+  }
+  function wall(c, w) {
+    shadow(c, w.x + w.w / 2 + 6, w.y + w.h / 2 + 7, w.w / 2 + 8, w.h / 2 + 7);
+    box(c, w.x - 2, w.y - 14, w.w + 4, w.h + 15, 3, "#382c29");
+    box(
+      c,
+      w.x - 2,
+      w.y - 20,
+      w.w + 4,
+      w.h + 5,
+      3,
+      gradient(c, w.x, w.y - 20, 0, w.h + 6, ["#ba8a56", "#765337"]),
+    );
+    line(c, w.x, w.y - 18, w.x + w.w, w.y - 18, "#e3b979", 2);
+    if (w.w > 50)
+      for (let x = w.x + 14; x < w.x + w.w; x += 40)
+        line(c, x, w.y - 15, x + 12, w.y + w.h - 18, "#543b2e66");
+  }
+  function makeRoom() {
+    let cv = document.createElement("canvas");
+    cv.width = 1000;
+    cv.height = 660;
+    let c = cv.getContext("2d");
+    c.fillStyle = gradient(c, 0, 0, 1000, 660, [
+      "#142d37",
+      "#182431",
+      "#101920",
+    ]);
+    c.fillRect(0, 0, 1000, 660);
+    shadow(c, 505, 338, 475, 303);
+    box(c, 29, 30, 932, 601, 16, "#222328", "#101721", 4);
+    box(c, 43, 44, 902, 572, 8, "#523b2d");
+    for (let row = 0; row < 25; row++) {
+      let y = 45 + row * 23;
+      for (let col = -1; col < 10; col++) {
+        let x = 45 + col * 108 + (row % 2) * 54;
+        let left = Math.max(45, x),
+          right = Math.min(943, x + 107);
+        if (right <= left) continue;
+        let colors = ["#6d4b34", "#76513a", "#80563a", "#684a37", "#78543a"];
+        box(
+          c,
+          left,
+          y,
+          right - left,
+          22,
+          2,
+          colors[(row * 7 + col + 10) % 5],
+          "#332922",
+          0.8,
+        );
+        line(c, left + 3, y + 2, right - 3, y + 2, "#c99a5c33");
+        for (let j = 0; j < 2; j++)
+          line(
+            c,
+            left + 7,
+            y + 8 + j * 7,
+            Math.min(right - 5, left + 55 + (row % 3) * 10),
+            y + 7 + j * 7,
+            "#352d282b",
+          );
+      }
+    }
+    // Stone floor in the office and worn, woven rugs.
+    box(c, 45, 45, 348, 140, 2, "#454c49", null);
+    for (let y = 48; y < 180; y += 29)
+      for (let x = 48; x < 390; x += 47)
+        box(
+          c,
+          x,
+          y,
+          43,
+          25,
+          3,
+          (x + y) % 3 ? "#555a50" : "#626354",
+          "#353d3c",
+          1,
+        );
+    box(c, 230, 325, 450, 262, 7, "#31282c", "#382329", 3);
+    box(c, 235, 330, 440, 252, 4, "#863e3b", "#c18a59", 2);
+    box(c, 248, 343, 414, 226, 2, "#65433b", "#d6a36b", 1);
+    for (let i = 0; i < 15; i++) {
+      let x = 255 + i * 27;
+      line(c, x, 334, x + 7, 340, "#e1b77a");
+      line(c, x, 575, x + 7, 568, "#e1b77a");
+    }
+    for (let y = 352; y < 565; y += 9) line(c, 252, y, 658, y, "#d4a3700d");
+    box(c, 752, 195, 167, 132, 4, "#254d51", "#bd935a", 2);
+    for (let x = 760; x < 916; x += 14) line(c, x, 201, x, 322, "#a9c3a514");
+    for (const f of DATA.furniture) furniture(c, f);
+    for (const w of DATA.walls) wall(c, w);
+    // Stone chimney with a dark firebox and a thick mantel.
+    shadow(c, 516, 86, 67, 30);
+    box(c, 456, 36, 112, 65, 7, "#6e6b60", "#292c30", 3);
+    for (let row = 0; row < 3; row++)
+      for (let col = 0; col < 5; col++)
+        box(
+          c,
+          459 + col * 21,
+          39 + row * 17,
+          19,
+          15,
+          2,
+          ["#8c8975", "#747969", "#a29b80"][(row + col) % 3],
+          "#4c504a",
+          1,
+        );
+    box(c, 469, 51, 86, 38, 15, "#252528", "#534d42", 4);
+    box(
+      c,
+      451,
+      88,
+      124,
+      11,
+      3,
+      gradient(c, 451, 88, 0, 11, ["#bba582", "#6a5d4e"]),
+    );
+    // Glazed windows and curtains establish thick outer walls.
+    for (let x of [400, 605]) {
+      box(c, x, 40, 52, 10, 3, "#151f29", "#7d6848");
+      box(c, x + 5, 42, 42, 6, 2, "#6a9a9c", null);
+      line(c, x + 26, 42, x + 26, 48, "#d3aa71", 3);
+    }
+    for (let [x, y] of [
+      [190, 67],
+      [678, 67],
+    ]) {
+      box(
+        c,
+        x,
+        y,
+        15,
+        108,
+        3,
+        gradient(c, x, y, 15, 0, ["#322b29", "#91683e", "#523927"]),
+      );
+      for (let yy of [y + 8, y + 80])
+        box(c, x - 3, yy, 21, 6, 2, "#414b49", "#282d30", 1);
+    }
+    barrel(c, 77, 255);
+    barrel(c, 77, 305);
+    barrel(c, 77, 355, true);
+    shadow(c, 124, 450, 26, 15);
+    box(c, 96, 432, 48, 20, 8, "#3d3e3c");
+    oval(
+      c,
+      120,
+      436,
+      23,
+      17,
+      gradient(c, 100, 420, 35, 25, ["#6c7e71", "#303c40"]),
+      "#1d272c",
+    );
+    oval(c, 120, 431, 19, 11, "#c79245", "#1f2a2d", 3);
+    for (let i = 0; i < 6; i++)
+      oval(
+        c,
+        108 + i * 4,
+        430 + (i % 3),
+        2,
+        1.5,
+        ["#d1b36a", "#63845d", "#b8663e"][i % 3],
+      );
+    box(c, 95, 75, 35, 53, 5, "#675341", "#322a28");
+    box(c, 99, 85, 27, 39, 4, "#397878");
+    box(c, 98, 76, 28, 13, 4, "#e6d7b0");
+    box(c, 267, 139, 27, 19, 2, "#eed6a6", "#765334", 1);
+    line(c, 270, 142, 287, 153, "#a48b65");
+    oval(c, 281, 150, 3, 3, "#a04e3b");
+    for (const [x, y] of [
+      [195, 210],
+      [685, 210],
+      [905, 375],
+      [225, 570],
+    ]) {
+      line(c, x, y - 20, x, y - 6, "#272c2e", 3);
+      box(c, x - 7, y - 10, 14, 19, 4, "#e4a84c", "#3d342c", 3);
+      box(c, x - 3, y - 7, 6, 12, 2, "#ffe1a0", null);
+      line(c, x - 10, y - 13, x + 10, y - 13, "#ac8456", 3);
+    }
+    box(c, 444, 609, 94, 16, 3, "#48392c", "#141e25", 3);
+    for (let x = 452; x < 535; x += 12) line(c, x, 612, x, 622, "#a77a4d");
+    // Edge shade keeps the center inviting without hiding navigable areas.
+    let vignette = c.createRadialGradient(500, 335, 180, 500, 335, 570);
+    vignette.addColorStop(0, "#0c152000");
+    vignette.addColorStop(1, "#0c152065");
+    c.fillStyle = vignette;
+    c.fillRect(35, 35, 918, 590);
+    return cv;
+  }
+  function room(c, time) {
+    if (!roomCache) roomCache = makeRoom();
+    c.drawImage(roomCache, 0, 0);
+    let t = performance.now() / 1000;
+    glow(c, 510, 83, 180, "#ffc05c35");
+    for (let [x, y] of [
+      [195, 210],
+      [685, 210],
+      [905, 375],
+      [225, 570],
+    ])
+      glow(c, x, y, 86, "#ffcd6b25");
+    for (let i = 0; i < 8; i++) {
+      let h = 15 + Math.sin(t * 4 + i * 3) * 5;
+      oval(c, 481 + i * 9, 81 - h / 2, 6, h / 2, i % 2 ? "#f5a341" : "#ef6c37");
+      oval(c, 482 + i * 9, 82 - h * 0.25, 3, h * 0.25, "#ffe898");
+    }
+    for (let i = 0; i < 3; i++) {
+      let yy = (t * 14 + i * 15) % 48;
+      c.strokeStyle =
+        "#e8dabb" +
+        Math.floor((1 - yy / 48) * 50)
+          .toString(16)
+          .padStart(2, "0");
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(120 + Math.sin(t + i) * 4, 421 - yy);
+      c.quadraticCurveTo(130, 414 - yy, 121, 407 - yy);
+      c.stroke();
+    }
+    if (time > 110) {
+      c.fillStyle = "#14203518";
+      c.fillRect(44, 44, 900, 571);
+    }
+  }
+  function person(c, n, keeper = false, time = 0) {
+    let moving = !!n.path?.length,
+      t = performance.now() / 1000,
+      step = moving ? Math.sin(t * 11) : 0,
+      bob = moving ? Math.abs(step) * 1.8 : Math.sin(t * 1.9 + n.x) * 0.5;
+    let x = n.x,
+      y = n.y - bob;
+    shadow(c, x + 4, y + 8, 18, 7);
+    if (keeper) {
+      c.strokeStyle = "#f5d38a";
+      c.lineWidth = 1.6;
+      c.beginPath();
+      c.ellipse(x, y + 9, 21, 9, 0, 0, 7);
+      c.stroke();
+    }
+    let broad = n.id === "bram",
+      w = broad ? 17 : 13;
+    box(c, x - w + 3, y - 1, 9, 13 + step * 3, 4, "#3c3030");
+    box(c, x + 3, y - 1, 9, 13 - step * 3, 4, "#3c3030");
+    line(
+      c,
+      x - w + 5,
+      y + 10 + step * 3,
+      x - w + 10,
+      y + 10 + step * 3,
+      "#9b7654",
+      2,
+    );
+    line(c, x + 5, y + 10 - step * 3, x + 10, y + 10 - step * 3, "#9b7654", 2);
+    box(
+      c,
+      x - w,
+      y - 26,
+      w * 2,
+      30,
+      9,
+      gradient(c, x - w, y - 25, w * 2, 18, [n.color, "#303c40"]),
+      "#20232a",
+      2.3,
+    );
+    oval(c, x - w, y - 13 + step * 2, 5, 10, n.color, "#26272b");
+    oval(c, x + w, y - 13 - step * 2, 5, 10, n.color, "#26272b");
+    oval(c, x - w, y - 5 + step * 2, 4, 4, "#c99570");
+    oval(c, x + w, y - 5 - step * 2, 4, 4, "#c99570");
+    line(c, x - w + 4, y - 17, x + w - 4, y - 17, "#e6d1a542", 2);
+    box(c, x - w + 2, y - 1, w * 2 - 4, 5, 1, "#47322b", null);
+    box(c, x - 2, y, 5, 4, 1, "#cea15d", null);
+    if (keeper) {
+      box(
+        c,
+        x - 9,
+        y - 18,
+        18,
+        22,
+        3,
+        gradient(c, x, y - 18, 0, 22, ["#e4d3a6", "#ab916c"]),
+        "#65573e",
+        1,
+      );
+      line(c, x - 9, y - 17, x + 10, y - 3, "#85724d", 1);
+    }
+    // Larger, shaded heads, ears, brows and noses replace the flat pawn shapes.
+    oval(c, x - 11, y - 33, 4, 5, "#bd845f", "#3b2b29");
+    oval(c, x + 11, y - 33, 4, 5, "#bd845f", "#3b2b29");
+    oval(
+      c,
+      x,
+      y - 34,
+      12,
+      14,
+      gradient(c, x - 10, y - 45, 20, 20, ["#efc99a", "#d9a276", "#a66c55"]),
+      "#352b2d",
+    );
+    let hair = n.hair || "#493633";
+    oval(c, x - 1, y - 44, 12, 7, hair, "#2c292c");
+    oval(c, x - 9, y - 38, 4, 7, hair);
+    line(c, x - 5, y - 34, x - 2, y - 34, "#4a3430", 2);
+    line(c, x + 4, y - 34, x + 7, y - 34, "#4a3430", 2);
+    oval(c, x - 3, y - 31, 1.3, 1.8, "#242932");
+    oval(c, x + 5, y - 31, 1.3, 1.8, "#242932");
+    oval(c, x + 1, y - 27, 3, 2, "#bc805e");
+    line(c, x - 2, y - 23, x + 4, y - 23, "#774c42", 1);
+    if (broad) {
+      oval(
+        c,
+        x,
+        y - 21,
+        11,
+        10,
+        gradient(c, x - 10, y - 25, 18, 12, ["#d5c9a9", "#9d9787"]),
+        "#514b46",
+      );
+      for (let i = -6; i <= 6; i += 4)
+        line(c, x + i, y - 22, x + i * 0.8, y - 14, "#6e716a", 1);
+      oval(c, x + 1, y - 28, 4, 3, "#d59c76");
+    }
+    if (n.id === "mira") {
+      c.strokeStyle = "#394d49";
+      c.lineWidth = 5;
+      c.beginPath();
+      c.arc(x, y - 37, 16, Math.PI, Math.PI * 2);
+      c.stroke();
+      line(c, x - 13, y - 39, x - 12, y - 23, "#455f54", 5);
+    }
+    if (n.id === "nell") {
+      oval(c, x + 13, y - 38, 6, 8, hair, "#44312c");
+      box(c, x - 13, y - 40, 25, 4, 2, "#c8d7b0", null);
+    }
+    if (n.id === "tomas") {
+      box(
+        c,
+        x - 13,
+        y - 48,
+        26,
+        9,
+        5,
+        gradient(c, x, y - 48, 0, 9, ["#b7c8b9", "#607c80"]),
+      );
+      line(c, x - 14, y - 39, x + 14, y - 39, "#d9d5b8", 3);
+      box(c, x - 8, y - 15, 16, 11, 3, "#81999b", "#374c57", 1);
+      line(c, x - 6, y - 12, x + 6, y - 12, "#d9d5b8");
+    }
+    if (n.id === "ivo") {
+      c.fillStyle = gradient(c, x - 15, y - 66, 25, 30, ["#c1a2cc", "#645689"]);
+      c.strokeStyle = "#302d44";
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(x - 13, y - 43);
+      c.quadraticCurveTo(x - 8, y - 72, x + 9, y - 65);
+      c.lineTo(x + 14, y - 43);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      oval(c, x, y - 43, 18, 4, "#85739f", "#322d43");
+      oval(c, x + 3, y - 55, 2, 2, "#f0d89e");
+    }
+    if (n.id === "aldous") {
+      box(c, x - 3, y - 15, 6, 11, 2, "#c7ad68", "#5b573b", 1);
+      line(c, x - 7, y - 12, x + 7, y - 12, "#c7ad68", 2);
+    }
+    if (n.id === "oren") {
+      line(c, x - 8, y - 25, x + 8, y - 25, "#69503d", 3);
+      oval(c, x + 13, y - 27, 2, 3, "#ebc474");
+    }
+    if (n.served || (keeper && n.carry))
+      mug(c, x + w + 4, y - 9 + Math.sin(t * 1.5) * 0.7);
+  }
+  return { room, person };
+})();
+
 const canvas = document.getElementById("game"),
   ctx = canvas.getContext("2d"),
   $ = (id) => document.getElementById(id);
@@ -1627,7 +2600,7 @@ function doAct(verb, id, opts) {
 function welcome() {
   state.paused = true;
   panel(
-    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Keep your own counsel</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
+    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Listen and decide</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
     "welcome",
   );
   $("coat").value = state.player.color;
@@ -1645,35 +2618,68 @@ function startGame() {
   save();
 }
 function talk(id) {
-  let n = Sim.npc(state, id);
-  doAct("talk", id);
-  let memory = n.memory
+  if (!doAct("talk", id)) return;
+  const n = Sim.npc(state, id),
+    def = DATA.npcs.find((d) => d.id === id);
+  const memories = n.memory
     .slice(-3)
-    .map((t) => '<p class="muted">' + esc(t) + "</p>")
+    .map(
+      (t) =>
+        "<li>" +
+        esc(
+          t.replace(
+            "You declined to share your confidence.",
+            "You chose not to share information.",
+          ),
+        ) +
+        "</li>",
+    )
     .join("");
-  let q = state.quest;
-  let personal =
-    n.id === "oren" && state.world.sold
-      ? "I paid for the news. I would prefer it did not become a public performance."
-      : n.id === "tomas" && state.events.search
-        ? "There has been a complaint about the tollhouse. Will you cooperate, or keep your confidence?"
-        : n.id === "cedric" && q?.resolved
-          ? q.outcome === "proof"
-            ? q.bram
-              ? "Bram made us stop before the bridge. We found something you should see."
-              : "Your warning kept me off the bridge. I found something you should see."
-            : q.outcome === "compromised"
-              ? "The warehouse was stripped. The Reed Knives knew where to look. Who told them?"
-              : q.returnLine || "I am back. Ask me about the journey."
-          : n.id === "bram" && n.familiar >= 2
-            ? "The north bridge is rotten. Take rope and use the ridge. Come home before you get brave."
-            : n.id === "tomas" && n.familiar >= 2
-              ? "The last wheel tracks turned toward the tollhouse. Willingly, by the look of it. That is a lead, not proof."
-              : null;
+  const options = Dialogue.choices(state, n)
+    .map(
+      (o) =>
+        '<div class="decision">' +
+        btn(o.label, "choice('" + o.verb + "','" + id + "')", o.disabled) +
+        "<p>" +
+        esc(o.detail) +
+        "</p></div>",
+    )
+    .join("");
   panel(
-    `<div class="eyebrow">${esc(n.role)} • ${esc(n.id === "mira" && !state.knowledge.knives ? "Independent, she says" : n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length && n.id === "mira" && state.world.leak ? "You gave me the road news. I put it to work. That is what I do." : personal || (n.familiar > 1 ? DATA.daily[n.id][state.day - 1] : n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar > 2 ? "Likes " + n.favorite + ". You are becoming familiar." : "Their habits will become familiar in time."}</p>${memory}<div class="actions">${n.id === "mira" ? btn("Share the wagon lead", "choice('share','mira')", !state.knowledge.wagons || state.world.leak) : ""}${n.id === "oren" ? btn("Sell road news · 15 coins", "choice('sell','oren')", !state.knowledge.wagons || state.world.sold) + btn("Use the ledger · 25 coins", "choice('exploit','oren')", !state.knowledge.ledger || state.world.exploited) : ""}${n.id === "nell" ? btn(state.staff.hired ? "Nell is on staff" : "Hire Nell · 12 coins", "choice('hire','nell')", state.staff.hired || state.coins < 12) + btn("Ask what she heard", "choice('report','nell')", !state.staff.hired) : ""}${n.id === "cedric" && q?.resolved ? btn("Ask about the journey", "choice('debrief','cedric')", q.debriefed) : ""}${n.id === "tomas" ? (state.events.search ? btn("Cooperate with the search", "choice('cooperate','tomas')") : "") + btn("Give ledger testimony", "choice('testify','tomas')", !state.knowledge.ledger) : ""}${btn("Keep your confidence", `choice('withhold','${id}')`)}${btn("Back to the room", "closePanel()")}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,
+    '<div class="character-head"><canvas id="portrait" width="112" height="118" aria-hidden="true"></canvas><div><div class="eyebrow">' +
+      esc(n.role) +
+      "</div><h2>" +
+      esc(n.name) +
+      '</h2></div></div><p class="spoken">“' +
+      esc(Dialogue.line(state, n)) +
+      '”</p><details class="person-notes"><summary>About ' +
+      esc(n.name) +
+      "</summary><p>“" +
+      esc(def.ambition) +
+      "”</p>" +
+      (n.familiar > 2
+        ? '<p class="muted">Favorite order: ' + esc(n.favorite) + ".</p>"
+        : "") +
+      (memories
+        ? "<h3>What " + esc(n.name) + " remembers</h3><ul>" + memories + "</ul>"
+        : "") +
+      '</details><div class="decisions">' +
+      options +
+      '</div><div class="actions">' +
+      btn("End conversation", "closePanel()") +
+      '</div><p class="muted">The inn stays busy while you talk. Press Space to pause and think. Ending this conversation does not share or refuse anything.</p>',
     "talk",
   );
+  const pc = $("portrait").getContext("2d");
+  pc.fillStyle = "#233c42";
+  pc.beginPath();
+  pc.arc(56, 58, 52, 0, Math.PI * 2);
+  pc.fill();
+  pc.save();
+  pc.translate(-22, -15);
+  pc.scale(1.4, 1.4);
+  TavernArt.person(pc, { ...n, x: 56, y: 75, path: [], served: false });
+  pc.restore();
 }
 function choice(v, id) {
   if (state.paused) return;
@@ -1685,7 +2691,7 @@ function board() {
     letter = state.evidence.find((e) => e.id === "letter");
   if (letter) doAct("inspect", "letter");
   panel(
-    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "A pin, a map of Rookcross, and a space where the rest of the world ought to be."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.returnSeen || q.debriefed ? "You have seen Cedric back at the inn. Find him for the full story." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
+    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "Your desk holds letters from travelers and a map of the roads around Rookcross."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.returnSeen || q.debriefed ? "You have seen Cedric back at the inn. Find him for the full story." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
 <div class="actions">${btn("Read journal", "journal()")}${btn("Back to the room", "closePanel()")}</div>`,
     "board",
   );
@@ -1854,199 +2860,33 @@ function bubble(t, x, y, color = "#d9d3b7") {
   text(t, x, y - 3, 14, color);
 }
 function person(n, isPlayer = false) {
-  let moving = n.path?.length,
-    walk = moving ? Math.sin(performance.now() / 95) * 3 : 0;
-  ellipse(n.x, n.y + 9, 17, 8, "#0005");
-  rect(n.x - 9, n.y + 2, 6, 10 + walk, "#282828");
-  rect(n.x + 3, n.y + 2, 6, 10 - walk, "#282828");
-  ellipse(n.x, n.y - 4, n.id === "bram" ? 16 : 12, 17, n.color);
-  ellipse(n.x, n.y - 21, 9, 10, "#d4ad80");
-  ellipse(n.x, n.y - 26, 10, 6, n.hair || "#3e3430");
-  if (n.id === "bram") ellipse(n.x, n.y - 14, 9, 9, n.hair);
-  if (n.id === "ivo") {
-    ctx.fillStyle = n.color;
-    ctx.beginPath();
-    ctx.moveTo(n.x - 13, n.y - 24);
-    ctx.lineTo(n.x + 3, n.y - 50);
-    ctx.lineTo(n.x + 13, n.y - 24);
-    ctx.fill();
-  }
-  if (n.id === "tomas") rect(n.x - 11, n.y - 28, 22, 5, "#a6b6b4");
-  if (isPlayer) {
-    ctx.strokeStyle = "#eed7a0";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(n.x, n.y + 10, 21, 11, 0, 0, 7);
-    ctx.stroke();
-    rect(n.x - 7, n.y - 5, 14, 16, "#d5c4a0");
-  }
-  if (n.served || (isPlayer && n.carry)) {
-    rect(n.x + 13, n.y - 9, 8, 10, "#c4994a");
-    rect(n.x + 13, n.y - 10, 8, 3, "#efe1bc");
-  }
+  TavernArt.person(ctx, n, isPlayer, state.time);
   if (n.id === "cedric" && state.quest?.outcome === "injured")
-    rect(n.x - 11, n.y - 5, 21, 4, "#ded8bd");
+    rect(n.x - 9, n.y - 14, 18, 4, "#e8dbb5");
+  ctx.save();
+  ctx.shadowColor = "#111a22";
+  ctx.shadowBlur = 4;
   text(
     isPlayer ? state.player.name : n.name,
     n.x,
     n.y + 29,
     13,
-    isPlayer ? "#ffe6ad" : "#e0d4bd",
+    isPlayer ? "#ffe6ad" : "#f0dcc0",
   );
+  ctx.restore();
 }
 function draw() {
   ctx.clearRect(0, 0, 1000, 660);
-  rect(0, 0, 1000, 660, "#19282c");
-  for (let i = 0; i < 45; i++) {
-    let x = (i * 73 + performance.now() * 0.015) % 1000,
-      y = (i * 43 + performance.now() * 0.09) % 660;
-    ctx.strokeStyle = "#a6c0bf15";
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - 4, y + 13);
-    ctx.stroke();
-  }
-  rect(30, 30, 930, 600, "#282c28");
-  rect(44, 44, 900, 572, "#65503a");
-  for (let y = 48; y < 617; y += 23) {
-    rect(44, y, 900, 1, "#302b2580");
-    for (let x = 44 + (Math.floor(y / 23) % 2) * 54; x < 941; x += 110)
-      rect(x, y, 1, 22, "#382f2870");
-  }
-  for (let i = 0; i < 90; i++) {
-    let x = 60 + ((i * 131) % 850),
-      y = 65 + ((i * 79) % 535);
-    rect(x, y, 22, 1, "#ad885020");
-  }
-  rect(45, 45, 348, 139, "#3b453d");
-  rect(728, 49, 212, 287, "#4a463c");
-  rect(750, 180, 172, 147, "#6c5141");
-  rect(230, 325, 450, 262, "#4c3e34");
-  ctx.strokeStyle = "#89704a";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(240, 335, 430, 242);
-  for (let x = 251; x < 655; x += 23) {
-    rect(x, 340, 8, 3, "#b0985b60");
-    rect(x, 568, 8, 3, "#b0985b60");
-  }
-  for (let o of DATA.walls) {
-    rect(o.x - 3, o.y, o.w + 6, o.h + 4, "#252c27");
-    rect(o.x, o.y, o.w, o.h, "#897457");
-    rect(
-      o.x + 3,
-      o.y + 3,
-      Math.max(2, o.w - 6),
-      Math.max(2, o.h - 6),
-      "#584832",
-    );
-  }
-  for (let f of DATA.furniture) {
-    rect(f.x - 3, f.y + 6, f.w + 6, f.h, "#0004");
-    rect(f.x, f.y, f.w, f.h, "#463428");
-    rect(
-      f.x + 4,
-      f.y + 3,
-      f.w - 8,
-      f.h - 7,
-      f.type === "bed" ? "#999276" : "#977046",
-    );
-    for (let y = f.y + 11; y < f.y + f.h - 6; y += 12)
-      rect(f.x + 5, y, f.w - 10, 1, "#37291e50");
-    if (f.type === "bed") rect(f.x + 6, f.y + 7, 26, f.h - 15, "#d0c4a2");
-    if (f.type === "table") {
-      ellipse(f.x + f.w / 2, f.y + 14, 7, 5, "#ccb993");
-      rect(f.x + 20, f.y + 12, 6, 10, "#bd8f43");
-      rect(f.x + f.w - 27, f.y + 15, 6, 10, "#bd8f43");
-      for (let x of [f.x + 12, f.x + f.w - 24]) {
-        rect(x, f.y - 19, 19, 11, "#493929");
-        rect(x, f.y + f.h + 8, 19, 11, "#493929");
-      }
-    }
-  }
-  // Quiet signs of a once-beautiful working inn.
-  for (let x of [195, 687]) {
-    rect(x, 52, 10, 128, "#322e26");
-    rect(x - 4, 68, 18, 12, "#746044");
-    rect(x + 2, 54, 2, 123, "#ba946633");
-  }
-  for (let x of [330, 630]) {
-    rect(x, 44, 62, 9, "#2c3330");
-    rect(x + 5, 45, 52, 5, "#708b8870");
-  }
-  for (let p of [
-    [195, 210],
-    [685, 210],
-    [905, 375],
-    [225, 570],
-  ]) {
-    ellipse(p[0], p[1], 38, 27, "#eeb7660b");
-    rect(p[0] - 5, p[1] - 7, 10, 15, "#c8a457");
-    rect(p[0] - 2, p[1] - 4, 4, 8, "#ffe4a4");
-  }
-  for (let i = 0; i < 5; i++)
-    rect(
-      253 + i * 13,
-      77,
-      9,
-      27 - (i % 2) * 6,
-      ["#647973", "#b7955e", "#a5654e"][i % 3],
-    );
-  rect(313, 107, 26, 13, "#daca9e");
-  rect(318, 110, 15, 1, "#77654d");
-  for (let p of [
-    [356, 395],
-    [560, 395],
-    [685, 510],
-    [810, 281],
-  ]) {
-    ellipse(p[0], p[1], 8, 5, "#8f9b8633");
-    rect(p[0] - 2, p[1] - 9, 4, 10, "#e0c995");
-    ellipse(p[0], p[1] - 10, 2, 4, "#ffe3a0");
-  }
-  for (let i = 0; i < 6; i++) {
-    rect(580 + i * 15, 92, 9, 3, "#84744b");
-    rect(583 + i * 15, 95, 3, 6, "#84744b");
-  }
-  rect(190, 480, 22, 50, "#655e49");
-  for (let i = 0; i < 4; i++) rect(188, 486 + i * 10, 26, 2, "#32382d");
-  ellipse(200, 477, 13, 6, "#909177");
-  // Hearth, casks, books and the room's old structural details.
-  rect(460, 45, 104, 54, "#969083");
-  rect(470, 48, 84, 41, "#302d25");
-  for (let i = 0; i < 9; i++) {
-    let h = 15 + Math.sin(performance.now() / 220 + i * 4) * 10;
-    ellipse(480 + i * 8, 83 - h / 2, 5, h / 2, i % 2 ? "#edb458" : "#c5713f");
-  }
-  let glow = ctx.createRadialGradient(510, 88, 5, 510, 88, 180);
-  glow.addColorStop(0, "#edaf5826");
-  glow.addColorStop(1, "#edaf5800");
-  ctx.fillStyle = glow;
-  ctx.fillRect(325, 40, 370, 230);
-  for (let st of DATA.stations.filter((s) =>
-    ["ale", "wine", "tea"].includes(s.id),
-  )) {
-    ellipse(st.x, st.y, 20, 18, st.id === "tea" ? "#879087" : "#927047");
-    ctx.strokeStyle = "#342e25";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(st.x, st.y, 16, 15, 0, 0, 7);
-    ctx.stroke();
-    rect(st.x + 14, st.y - 2, 12, 5, "#c6aa6e");
-    text(st.id, st.x, st.y + 29, 11);
-  }
-  ellipse(120, 440, 23, 19, "#343d37");
-  ellipse(120, 437, 18, 12, "#b48746");
-  text("stew", 120, 472, 11);
-  rect(95, 75, 35, 53, "#9a8b6b");
-  rect(97, 78, 31, 12, "#d5c7a0");
-  rect(268, 135, 26, 21, "#e0cd9e");
-  text("OFFICE", 300, 58, 11, "#c4bd9b");
-  text("ROOM TWO", 835, 60, 11, "#c4bd9b");
-  text("PRIVATE BOOTH", 830, 320, 10, "#c4bd9b");
-  text("ROOKCROSS", 500, 647, 12, "#a8b7ad");
-  rect(445, 610, 90, 20, "#34372e");
-  text("front door", 490, 629, 11, "#a5a58a");
-  text("back door", 922, 218, 10, "#c4bd9b");
+  TavernArt.room(ctx, state.time);
+  text("OFFICE", 300, 58, 10, "#e4c494");
+  text("GUEST ROOM", 838, 61, 10, "#e4c494");
+  text("PRIVATE BOOTH", 832, 322, 10, "#c7c9aa");
+  text("FRONT DOOR", 490, 641, 10, "#adbeae");
+  text("BACK DOOR", 911, 218, 9, "#c6c6ad");
+  for (const st of DATA.stations.filter((s) =>
+    ["ale", "wine", "tea", "stew"].includes(s.id),
+  ))
+    text(st.id.toUpperCase(), st.x, st.y + 29, 10, "#e8c899");
   for (let e of state.evidence) {
     if (e.id === "spill") {
       ellipse(e.x, e.y, 21, 12, "#8b72a777");

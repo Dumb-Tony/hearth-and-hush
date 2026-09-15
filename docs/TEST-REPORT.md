@@ -56,6 +56,12 @@ The public GitHub Pages URL was opened in the browser and the onboarding and pla
 
 See README for explicit feature deferrals. Most importantly, authored schedules are a bounded prototype of independent lives; there is one expedition and one main information arc. Art is simple 2D. Long-term attachment, robust screen-reader play, fully supported touch interaction and the eventual 3D design are unproven.
 
+## Dialogue clarity and art pass, September 15
+
+All 36 scenario regressions pass. New checks verify that refusal requires an applicable request, declining to share does not leak information or change coins, stale choices disappear after sharing, unaffordable hiring is disabled, and existing saves receive revised authored dialogue.
+
+Agent-driven browser checks loaded the existing day-four save, inspected the shaded room and character rendering at 1280 × 720, walked to Nell, opened her dialogue and portrait, and closed it with End conversation. Her current line and the staff-report choice were readable without clipping; no generic refusal appeared. This is a browser UI check, not human assessment of visual style or game feel. Movement geometry is unchanged; the existing complete route regressions still pass.
+
 ## Additional refinement pass, September 15
 
 Eight additional scenario regressions verify safe retreat under cautious instructions, Bram's independent route knowledge, a prepared solo expedition, unseen-return privacy, preservation of confirmed evidence, single-conversation attention, limited whisper coverage for staff, and migration of existing saves. All 34 pass.

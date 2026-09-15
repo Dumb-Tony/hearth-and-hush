@@ -594,12 +594,32 @@ const Sim = (() => {
       return true;
     }
     if (verb === "withhold") {
-      if (id === "tomas" && s.events.search)
+      const search = id === "tomas" && s.events.search;
+      const wagonRequest =
+        s.knowledge.wagons &&
+        ((id === "mira" && !s.world.leak) || (id === "oren" && !s.world.sold));
+      if (!search && !wagonRequest) return false;
+      if (search)
         s.world.guard =
           "You declined the watch search; Tomas left without your testimony";
-      n.memory.push("You declined to share your confidence.");
-      note(s, "You kept your confidence from " + n.name + ".");
-      say(s, n.name + ": Fair enough. I will remember that.");
+      n.memory.push(
+        search
+          ? "You refused to let me search the inn."
+          : "You refused to tell me what you know about the missing wagons.",
+      );
+      note(
+        s,
+        search
+          ? "You refused Tomas permission to search the inn."
+          : "You chose not to share the wagon information with " + n.name + ".",
+      );
+      say(
+        s,
+        n.name +
+          (search
+            ? ": All right. I will record that you refused the search."
+            : ": All right. Keep it to yourself, then."),
+      );
       return true;
     }
     if (verb === "exploit") {
@@ -800,7 +820,7 @@ const Sim = (() => {
                 : "An expedition is still on the road."
         : "No expedition left your door this week.",
       s.world.leak
-        ? "Mira passed your confidence to the Reed Knives. Information kept moving after you let it go."
+        ? "Mira told the Reed Knives what you said about the wagons."
         : "Mira never received the wagon trail from you.",
       s.world.trade + ".",
       s.debt

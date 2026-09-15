@@ -38,6 +38,8 @@ Node 24; no dependencies. `npm test` runs scenario regressions. `npm run build` 
 - `src/data.js`: stable-ID NPC, rumor, conversation and layout content.
 - `src/sim.js`: serializable state and game rules, independent of the DOM.
 - `src/view.js`: rendering, input, spatial interactions and journal.
+- `src/dialogue.js`: contextual choices and current character dialogue.
+- `src/art.js`: shaded tavern scenery and character portraits, drawn locally in Canvas.
 - `src/ambience.js`: optional synthesized audio.
 
 The later Unity version should reimplement stable-ID data and state rules in C#, with richer scene presentation; it should not mechanically port canvas drawing.
@@ -47,3 +49,5 @@ All characters and scenario details introduced in this build are provisional. Th
 ## September 15 refinement
 
 Nearby overlapping speech now teaches only the conversation actually displayed. Nell needs sustained close hearing and respects whispered volume. The journal records witnessed relationship developments, and the board no longer announces an unseen return. Confirmed evidence stays confirmed when later hearsay arrives. Existing saves migrate without losing the week, and the chosen coat survives reopening.
+
+Dialogue now names the information being shared or refused, with explanations beneath consequential choices and a neutral conversation exit. Character introductions and all seven days of ambient replies use clearer, concrete language. The tavern has a shaded storybook treatment: timber and stone, raised furniture, warm lighting, expressive faces and matching portraits. The scene remains 2D and preserves the existing movement layout.

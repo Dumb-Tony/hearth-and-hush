@@ -6,10 +6,12 @@ vm.runInContext(
   fs.readFileSync("src/data.js", "utf8") +
     "\n" +
     fs.readFileSync("src/sim.js", "utf8") +
-    "\nglobalThis.api={DATA,Sim};",
+    "\n" +
+    fs.readFileSync("src/dialogue.js", "utf8") +
+    "\nglobalThis.api={DATA,Sim,Dialogue};",
   context,
 );
-const { DATA, Sim } = context.api;
+const { DATA, Sim, Dialogue } = context.api;
 let count = 0;
 function test(name, fn) {
   try {
@@ -499,5 +501,46 @@ test("existing v1 saves migrate without resetting the player's week", () => {
   const restored = Sim.restore(JSON.stringify(old));
   assert.equal(restored.day, 4);
   assert.equal(Object.keys(restored.observedRelationships).length, 0);
+});
+test("refusal choices require an actual information request", () => {
+  const s = Sim.fresh();
+  for (const id of [
+    "nell",
+    "bram",
+    "cedric",
+    "aldous",
+    "ivo",
+    "mira",
+    "oren",
+  ]) {
+    const n = place(s, id);
+    assert(!Dialogue.choices(s, n).some((o) => o.verb === "withhold"));
+    assert.equal(Sim.act(s, "withhold", id), false);
+  }
+  Sim.learn(s, "wagons", "witness");
+  const mira = place(s, "mira");
+  assert(Dialogue.choices(s, mira).some((o) => o.verb === "withhold"));
+  const coins = s.coins;
+  assert(Sim.act(s, "withhold", "mira"));
+  assert.equal(s.coins, coins);
+  assert(!s.world.leak);
+  assert(Sim.act(s, "share", "mira"));
+  assert(
+    !Dialogue.choices(s, mira).some(
+      (o) => o.verb === "share" || o.verb === "withhold",
+    ),
+  );
+});
+test("dialogue refreshes authored copy in existing saves", () => {
+  const s = Sim.fresh();
+  const nell = Sim.npc(s, "nell");
+  nell.intro = "obsolete saved dialogue";
+  nell.familiar = 0;
+  assert.equal(
+    Dialogue.line(s, nell),
+    DATA.npcs.find((n) => n.id === "nell").intro,
+  );
+  s.coins = 0;
+  assert(Dialogue.choices(s, nell).find((o) => o.verb === "hire").disabled);
 });
 console.log("\n" + count + " scenario regressions passed.");

@@ -281,3 +281,122 @@ footer {
     min-height: 28px;
   }
 }
+body {
+  background: radial-gradient(ellipse at 50% 10%, #26383b, #111b25 70%);
+  color: #f1dec0;
+}
+header {
+  border-bottom: 1px solid #c3985230;
+  margin-bottom: 9px;
+}
+h1 {
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #edc990;
+  text-shadow: 0 3px 0 #0004;
+}
+.tools button {
+  background: linear-gradient(#3b4d4e, #24373f);
+  border-color: #708078;
+  border-radius: 7px;
+  box-shadow: 0 3px 0 #0c1920;
+}
+#stage {
+  border: 2px solid #977448;
+  border-radius: 15px;
+  box-shadow:
+    0 0 0 5px #18262d,
+    0 25px 70px #050d17a0;
+}
+#panel {
+  background: linear-gradient(135deg, #2d4246, #1c2b35);
+  border: 2px solid #a38154;
+  box-shadow:
+    0 0 0 5px #14222ac0,
+    0 25px 90px #0009;
+}
+#panel h2 {
+  font-weight: bold;
+  color: #f4d59e;
+}
+#panel .spoken {
+  font-size: 20px;
+  line-height: 1.6;
+  color: #f3e4ca;
+  margin-top: 15px;
+}
+.character-head {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.character-head canvas {
+  width: 100px;
+  height: 106px;
+  flex: none;
+}
+.character-head h2 {
+  margin: 5px 0 !important;
+}
+.person-notes {
+  font: 14px system-ui;
+  line-height: 1.6;
+  color: #c7d1c5;
+  border-top: 1px solid #80918255;
+  border-bottom: 1px solid #80918255;
+  padding: 10px 0;
+}
+.person-notes summary {
+  cursor: pointer;
+  color: #debc82;
+}
+.person-notes li {
+  margin: 5px 0;
+}
+.decisions {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.decision {
+  border-left: 3px solid #bb9356;
+  padding-left: 12px;
+}
+.decision button {
+  background: linear-gradient(#51625b, #364b48);
+  text-align: left;
+  font: 600 15px system-ui;
+}
+.decision p {
+  font: 13px/1.5 system-ui !important;
+  margin: 6px 0 0 !important;
+  color: #bccbbc !important;
+}
+#caption {
+  background: linear-gradient(#263d40f5, #192b35fa);
+  box-shadow: 0 5px 18px #0008;
+  border: 1px solid #cfa567;
+  border-radius: 10px;
+  text-align: left;
+  padding: 12px 18px;
+  font-size: 16px;
+  left: 17%;
+  right: 17%;
+}
+#toast {
+  color: #dfc89d;
+}
+.eyebrow {
+  color: #c8b68f;
+}
+button {
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+button:hover {
+  transform: translateY(-1px);
+}
+main {
+  max-width: min(1260px, calc((100vh - 180px) * 1.51515 + 40px));
+}

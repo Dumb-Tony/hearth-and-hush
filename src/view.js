@@ -58,7 +58,7 @@ function doAct(verb, id, opts) {
 function welcome() {
   state.paused = true;
   panel(
-    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Keep your own counsel</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
+    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Listen and decide</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
     "welcome",
   );
   $("coat").value = state.player.color;
@@ -76,35 +76,68 @@ function startGame() {
   save();
 }
 function talk(id) {
-  let n = Sim.npc(state, id);
-  doAct("talk", id);
-  let memory = n.memory
+  if (!doAct("talk", id)) return;
+  const n = Sim.npc(state, id),
+    def = DATA.npcs.find((d) => d.id === id);
+  const memories = n.memory
     .slice(-3)
-    .map((t) => '<p class="muted">' + esc(t) + "</p>")
+    .map(
+      (t) =>
+        "<li>" +
+        esc(
+          t.replace(
+            "You declined to share your confidence.",
+            "You chose not to share information.",
+          ),
+        ) +
+        "</li>",
+    )
     .join("");
-  let q = state.quest;
-  let personal =
-    n.id === "oren" && state.world.sold
-      ? "I paid for the news. I would prefer it did not become a public performance."
-      : n.id === "tomas" && state.events.search
-        ? "There has been a complaint about the tollhouse. Will you cooperate, or keep your confidence?"
-        : n.id === "cedric" && q?.resolved
-          ? q.outcome === "proof"
-            ? q.bram
-              ? "Bram made us stop before the bridge. We found something you should see."
-              : "Your warning kept me off the bridge. I found something you should see."
-            : q.outcome === "compromised"
-              ? "The warehouse was stripped. The Reed Knives knew where to look. Who told them?"
-              : q.returnLine || "I am back. Ask me about the journey."
-          : n.id === "bram" && n.familiar >= 2
-            ? "The north bridge is rotten. Take rope and use the ridge. Come home before you get brave."
-            : n.id === "tomas" && n.familiar >= 2
-              ? "The last wheel tracks turned toward the tollhouse. Willingly, by the look of it. That is a lead, not proof."
-              : null;
+  const options = Dialogue.choices(state, n)
+    .map(
+      (o) =>
+        '<div class="decision">' +
+        btn(o.label, "choice('" + o.verb + "','" + id + "')", o.disabled) +
+        "<p>" +
+        esc(o.detail) +
+        "</p></div>",
+    )
+    .join("");
   panel(
-    `<div class="eyebrow">${esc(n.role)} • ${esc(n.id === "mira" && !state.knowledge.knives ? "Independent, she says" : n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length && n.id === "mira" && state.world.leak ? "You gave me the road news. I put it to work. That is what I do." : personal || (n.familiar > 1 ? DATA.daily[n.id][state.day - 1] : n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar > 2 ? "Likes " + n.favorite + ". You are becoming familiar." : "Their habits will become familiar in time."}</p>${memory}<div class="actions">${n.id === "mira" ? btn("Share the wagon lead", "choice('share','mira')", !state.knowledge.wagons || state.world.leak) : ""}${n.id === "oren" ? btn("Sell road news · 15 coins", "choice('sell','oren')", !state.knowledge.wagons || state.world.sold) + btn("Use the ledger · 25 coins", "choice('exploit','oren')", !state.knowledge.ledger || state.world.exploited) : ""}${n.id === "nell" ? btn(state.staff.hired ? "Nell is on staff" : "Hire Nell · 12 coins", "choice('hire','nell')", state.staff.hired || state.coins < 12) + btn("Ask what she heard", "choice('report','nell')", !state.staff.hired) : ""}${n.id === "cedric" && q?.resolved ? btn("Ask about the journey", "choice('debrief','cedric')", q.debriefed) : ""}${n.id === "tomas" ? (state.events.search ? btn("Cooperate with the search", "choice('cooperate','tomas')") : "") + btn("Give ledger testimony", "choice('testify','tomas')", !state.knowledge.ledger) : ""}${btn("Keep your confidence", `choice('withhold','${id}')`)}${btn("Back to the room", "closePanel()")}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,
+    '<div class="character-head"><canvas id="portrait" width="112" height="118" aria-hidden="true"></canvas><div><div class="eyebrow">' +
+      esc(n.role) +
+      "</div><h2>" +
+      esc(n.name) +
+      '</h2></div></div><p class="spoken">“' +
+      esc(Dialogue.line(state, n)) +
+      '”</p><details class="person-notes"><summary>About ' +
+      esc(n.name) +
+      "</summary><p>“" +
+      esc(def.ambition) +
+      "”</p>" +
+      (n.familiar > 2
+        ? '<p class="muted">Favorite order: ' + esc(n.favorite) + ".</p>"
+        : "") +
+      (memories
+        ? "<h3>What " + esc(n.name) + " remembers</h3><ul>" + memories + "</ul>"
+        : "") +
+      '</details><div class="decisions">' +
+      options +
+      '</div><div class="actions">' +
+      btn("End conversation", "closePanel()") +
+      '</div><p class="muted">The inn stays busy while you talk. Press Space to pause and think. Ending this conversation does not share or refuse anything.</p>',
     "talk",
   );
+  const pc = $("portrait").getContext("2d");
+  pc.fillStyle = "#233c42";
+  pc.beginPath();
+  pc.arc(56, 58, 52, 0, Math.PI * 2);
+  pc.fill();
+  pc.save();
+  pc.translate(-22, -15);
+  pc.scale(1.4, 1.4);
+  TavernArt.person(pc, { ...n, x: 56, y: 75, path: [], served: false });
+  pc.restore();
 }
 function choice(v, id) {
   if (state.paused) return;
@@ -116,7 +149,7 @@ function board() {
     letter = state.evidence.find((e) => e.id === "letter");
   if (letter) doAct("inspect", "letter");
   panel(
-    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "A pin, a map of Rookcross, and a space where the rest of the world ought to be."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.returnSeen || q.debriefed ? "You have seen Cedric back at the inn. Find him for the full story." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
+    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "Your desk holds letters from travelers and a map of the roads around Rookcross."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.returnSeen || q.debriefed ? "You have seen Cedric back at the inn. Find him for the full story." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
 <div class="actions">${btn("Read journal", "journal()")}${btn("Back to the room", "closePanel()")}</div>`,
     "board",
   );
@@ -285,199 +318,33 @@ function bubble(t, x, y, color = "#d9d3b7") {
   text(t, x, y - 3, 14, color);
 }
 function person(n, isPlayer = false) {
-  let moving = n.path?.length,
-    walk = moving ? Math.sin(performance.now() / 95) * 3 : 0;
-  ellipse(n.x, n.y + 9, 17, 8, "#0005");
-  rect(n.x - 9, n.y + 2, 6, 10 + walk, "#282828");
-  rect(n.x + 3, n.y + 2, 6, 10 - walk, "#282828");
-  ellipse(n.x, n.y - 4, n.id === "bram" ? 16 : 12, 17, n.color);
-  ellipse(n.x, n.y - 21, 9, 10, "#d4ad80");
-  ellipse(n.x, n.y - 26, 10, 6, n.hair || "#3e3430");
-  if (n.id === "bram") ellipse(n.x, n.y - 14, 9, 9, n.hair);
-  if (n.id === "ivo") {
-    ctx.fillStyle = n.color;
-    ctx.beginPath();
-    ctx.moveTo(n.x - 13, n.y - 24);
-    ctx.lineTo(n.x + 3, n.y - 50);
-    ctx.lineTo(n.x + 13, n.y - 24);
-    ctx.fill();
-  }
-  if (n.id === "tomas") rect(n.x - 11, n.y - 28, 22, 5, "#a6b6b4");
-  if (isPlayer) {
-    ctx.strokeStyle = "#eed7a0";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(n.x, n.y + 10, 21, 11, 0, 0, 7);
-    ctx.stroke();
-    rect(n.x - 7, n.y - 5, 14, 16, "#d5c4a0");
-  }
-  if (n.served || (isPlayer && n.carry)) {
-    rect(n.x + 13, n.y - 9, 8, 10, "#c4994a");
-    rect(n.x + 13, n.y - 10, 8, 3, "#efe1bc");
-  }
+  TavernArt.person(ctx, n, isPlayer, state.time);
   if (n.id === "cedric" && state.quest?.outcome === "injured")
-    rect(n.x - 11, n.y - 5, 21, 4, "#ded8bd");
+    rect(n.x - 9, n.y - 14, 18, 4, "#e8dbb5");
+  ctx.save();
+  ctx.shadowColor = "#111a22";
+  ctx.shadowBlur = 4;
   text(
     isPlayer ? state.player.name : n.name,
     n.x,
     n.y + 29,
     13,
-    isPlayer ? "#ffe6ad" : "#e0d4bd",
+    isPlayer ? "#ffe6ad" : "#f0dcc0",
   );
+  ctx.restore();
 }
 function draw() {
   ctx.clearRect(0, 0, 1000, 660);
-  rect(0, 0, 1000, 660, "#19282c");
-  for (let i = 0; i < 45; i++) {
-    let x = (i * 73 + performance.now() * 0.015) % 1000,
-      y = (i * 43 + performance.now() * 0.09) % 660;
-    ctx.strokeStyle = "#a6c0bf15";
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - 4, y + 13);
-    ctx.stroke();
-  }
-  rect(30, 30, 930, 600, "#282c28");
-  rect(44, 44, 900, 572, "#65503a");
-  for (let y = 48; y < 617; y += 23) {
-    rect(44, y, 900, 1, "#302b2580");
-    for (let x = 44 + (Math.floor(y / 23) % 2) * 54; x < 941; x += 110)
-      rect(x, y, 1, 22, "#382f2870");
-  }
-  for (let i = 0; i < 90; i++) {
-    let x = 60 + ((i * 131) % 850),
-      y = 65 + ((i * 79) % 535);
-    rect(x, y, 22, 1, "#ad885020");
-  }
-  rect(45, 45, 348, 139, "#3b453d");
-  rect(728, 49, 212, 287, "#4a463c");
-  rect(750, 180, 172, 147, "#6c5141");
-  rect(230, 325, 450, 262, "#4c3e34");
-  ctx.strokeStyle = "#89704a";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(240, 335, 430, 242);
-  for (let x = 251; x < 655; x += 23) {
-    rect(x, 340, 8, 3, "#b0985b60");
-    rect(x, 568, 8, 3, "#b0985b60");
-  }
-  for (let o of DATA.walls) {
-    rect(o.x - 3, o.y, o.w + 6, o.h + 4, "#252c27");
-    rect(o.x, o.y, o.w, o.h, "#897457");
-    rect(
-      o.x + 3,
-      o.y + 3,
-      Math.max(2, o.w - 6),
-      Math.max(2, o.h - 6),
-      "#584832",
-    );
-  }
-  for (let f of DATA.furniture) {
-    rect(f.x - 3, f.y + 6, f.w + 6, f.h, "#0004");
-    rect(f.x, f.y, f.w, f.h, "#463428");
-    rect(
-      f.x + 4,
-      f.y + 3,
-      f.w - 8,
-      f.h - 7,
-      f.type === "bed" ? "#999276" : "#977046",
-    );
-    for (let y = f.y + 11; y < f.y + f.h - 6; y += 12)
-      rect(f.x + 5, y, f.w - 10, 1, "#37291e50");
-    if (f.type === "bed") rect(f.x + 6, f.y + 7, 26, f.h - 15, "#d0c4a2");
-    if (f.type === "table") {
-      ellipse(f.x + f.w / 2, f.y + 14, 7, 5, "#ccb993");
-      rect(f.x + 20, f.y + 12, 6, 10, "#bd8f43");
-      rect(f.x + f.w - 27, f.y + 15, 6, 10, "#bd8f43");
-      for (let x of [f.x + 12, f.x + f.w - 24]) {
-        rect(x, f.y - 19, 19, 11, "#493929");
-        rect(x, f.y + f.h + 8, 19, 11, "#493929");
-      }
-    }
-  }
-  // Quiet signs of a once-beautiful working inn.
-  for (let x of [195, 687]) {
-    rect(x, 52, 10, 128, "#322e26");
-    rect(x - 4, 68, 18, 12, "#746044");
-    rect(x + 2, 54, 2, 123, "#ba946633");
-  }
-  for (let x of [330, 630]) {
-    rect(x, 44, 62, 9, "#2c3330");
-    rect(x + 5, 45, 52, 5, "#708b8870");
-  }
-  for (let p of [
-    [195, 210],
-    [685, 210],
-    [905, 375],
-    [225, 570],
-  ]) {
-    ellipse(p[0], p[1], 38, 27, "#eeb7660b");
-    rect(p[0] - 5, p[1] - 7, 10, 15, "#c8a457");
-    rect(p[0] - 2, p[1] - 4, 4, 8, "#ffe4a4");
-  }
-  for (let i = 0; i < 5; i++)
-    rect(
-      253 + i * 13,
-      77,
-      9,
-      27 - (i % 2) * 6,
-      ["#647973", "#b7955e", "#a5654e"][i % 3],
-    );
-  rect(313, 107, 26, 13, "#daca9e");
-  rect(318, 110, 15, 1, "#77654d");
-  for (let p of [
-    [356, 395],
-    [560, 395],
-    [685, 510],
-    [810, 281],
-  ]) {
-    ellipse(p[0], p[1], 8, 5, "#8f9b8633");
-    rect(p[0] - 2, p[1] - 9, 4, 10, "#e0c995");
-    ellipse(p[0], p[1] - 10, 2, 4, "#ffe3a0");
-  }
-  for (let i = 0; i < 6; i++) {
-    rect(580 + i * 15, 92, 9, 3, "#84744b");
-    rect(583 + i * 15, 95, 3, 6, "#84744b");
-  }
-  rect(190, 480, 22, 50, "#655e49");
-  for (let i = 0; i < 4; i++) rect(188, 486 + i * 10, 26, 2, "#32382d");
-  ellipse(200, 477, 13, 6, "#909177");
-  // Hearth, casks, books and the room's old structural details.
-  rect(460, 45, 104, 54, "#969083");
-  rect(470, 48, 84, 41, "#302d25");
-  for (let i = 0; i < 9; i++) {
-    let h = 15 + Math.sin(performance.now() / 220 + i * 4) * 10;
-    ellipse(480 + i * 8, 83 - h / 2, 5, h / 2, i % 2 ? "#edb458" : "#c5713f");
-  }
-  let glow = ctx.createRadialGradient(510, 88, 5, 510, 88, 180);
-  glow.addColorStop(0, "#edaf5826");
-  glow.addColorStop(1, "#edaf5800");
-  ctx.fillStyle = glow;
-  ctx.fillRect(325, 40, 370, 230);
-  for (let st of DATA.stations.filter((s) =>
-    ["ale", "wine", "tea"].includes(s.id),
-  )) {
-    ellipse(st.x, st.y, 20, 18, st.id === "tea" ? "#879087" : "#927047");
-    ctx.strokeStyle = "#342e25";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(st.x, st.y, 16, 15, 0, 0, 7);
-    ctx.stroke();
-    rect(st.x + 14, st.y - 2, 12, 5, "#c6aa6e");
-    text(st.id, st.x, st.y + 29, 11);
-  }
-  ellipse(120, 440, 23, 19, "#343d37");
-  ellipse(120, 437, 18, 12, "#b48746");
-  text("stew", 120, 472, 11);
-  rect(95, 75, 35, 53, "#9a8b6b");
-  rect(97, 78, 31, 12, "#d5c7a0");
-  rect(268, 135, 26, 21, "#e0cd9e");
-  text("OFFICE", 300, 58, 11, "#c4bd9b");
-  text("ROOM TWO", 835, 60, 11, "#c4bd9b");
-  text("PRIVATE BOOTH", 830, 320, 10, "#c4bd9b");
-  text("ROOKCROSS", 500, 647, 12, "#a8b7ad");
-  rect(445, 610, 90, 20, "#34372e");
-  text("front door", 490, 629, 11, "#a5a58a");
-  text("back door", 922, 218, 10, "#c4bd9b");
+  TavernArt.room(ctx, state.time);
+  text("OFFICE", 300, 58, 10, "#e4c494");
+  text("GUEST ROOM", 838, 61, 10, "#e4c494");
+  text("PRIVATE BOOTH", 832, 322, 10, "#c7c9aa");
+  text("FRONT DOOR", 490, 641, 10, "#adbeae");
+  text("BACK DOOR", 911, 218, 9, "#c6c6ad");
+  for (const st of DATA.stations.filter((s) =>
+    ["ale", "wine", "tea", "stew"].includes(s.id),
+  ))
+    text(st.id.toUpperCase(), st.x, st.y + 29, 10, "#e8c899");
   for (let e of state.evidence) {
     if (e.id === "spill") {
       ellipse(e.x, e.y, 21, 12, "#8b72a777");

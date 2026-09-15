@@ -26,6 +26,8 @@ The actual local build was opened in the Codex browser at a laptop-sized viewpor
 - Hiring Nell deducts 12 coins, closes the conversation, and changes the room's delegation status.
 - Save/reload returns to the current day and keeps the keeper's position and state.
 - The complete room, front door, controls and status now fit on the laptop viewport without scrolling.
+- Public-build movement beside Bram and Cedric reveals their full bridge warning; the journal records Bram, day one, and the overheard channel.
+- Journal return buttons were clicked and verified to close the overlay after the browser-specific handler fix.
 
 This is agent-driven browser playtesting, **not a human manual-feel test**. The full week and expedition branches were exercised in the deterministic simulation, not replayed for 21 wall-clock minutes through browser input. Browser audio and touch play have not received human listening/usability checks.
 
@@ -40,6 +42,7 @@ This is agent-driven browser playtesting, **not a human manual-feel test**. The 
 7. Repeated service could create unlimited coins → additional drinks are gifts after a guest's first paid service that day.
 8. Nearby interaction hint could identify a guest through a wall → enforce sight at target selection as well as action execution.
 9. Rehydrated NPCs kept old routes after layout edits → rebuild routes after loading.
+10. An inline `close()` handler resolved to the browser document method instead of closing the journal → use a distinct `closePanel()` name; retested by clicking the real button.
 
 ## Next human playtest
 

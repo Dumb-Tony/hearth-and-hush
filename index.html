@@ -1523,7 +1523,7 @@ function panel(html, kind = "read") {
   $("panel").innerHTML = html;
   $("overlay").style.display = "flex";
 }
-function close() {
+function closePanel() {
   modal = null;
   $("overlay").style.display = "none";
   keys = {};
@@ -1535,7 +1535,7 @@ function pause() {
   if (modal === "welcome" || state.ended) return;
   state.paused = !state.paused;
   keys = {};
-  if (!state.paused && modal === "journal") close();
+  if (!state.paused && modal === "journal") closePanel();
 }
 function doAct(verb, id, opts) {
   const ok = Sim.act(state, verb, id, opts);
@@ -1558,7 +1558,7 @@ function startGame() {
   state.player.color = $("coat").value;
   state.paused = false;
   started = true;
-  close();
+  closePanel();
   if (state.ended) {
     state.paused = true;
     ending();
@@ -1590,14 +1590,14 @@ function talk(id) {
               ? "The last wheel tracks turned toward the tollhouse. Willingly, by the look of it. That is a lead, not proof."
               : null;
   panel(
-    `<div class="eyebrow">${esc(n.role)} • ${esc(n.id === "mira" && !state.knowledge.knives ? "Independent, she says" : n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length && n.id === "mira" && state.world.leak ? "You gave me the road news. I put it to work. That is what I do." : personal || (n.familiar > 1 ? DATA.daily[n.id][state.day - 1] : n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar > 2 ? "Likes " + n.favorite + ". You are becoming familiar." : "Their habits will become familiar in time."}</p>${memory}<div class="actions">${n.id === "mira" ? btn("Share the wagon lead", "choice('share','mira')", !state.knowledge.wagons || state.world.leak) : ""}${n.id === "oren" ? btn("Sell road news · 15 coins", "choice('sell','oren')", !state.knowledge.wagons || state.world.sold) + btn("Use the ledger · 25 coins", "choice('exploit','oren')", !state.knowledge.ledger || state.world.exploited) : ""}${n.id === "nell" ? btn(state.staff.hired ? "Nell is on staff" : "Hire Nell · 12 coins", "choice('hire','nell')", state.staff.hired || state.coins < 12) + btn("Ask what she heard", "choice('report','nell')", !state.staff.hired) : ""}${n.id === "cedric" && q?.resolved ? btn("Ask about the journey", "choice('debrief','cedric')", q.debriefed) : ""}${n.id === "tomas" ? (state.events.search ? btn("Cooperate with the search", "choice('cooperate','tomas')") : "") + btn("Give ledger testimony", "choice('testify','tomas')", !state.knowledge.ledger) : ""}${btn("Keep your confidence", `choice('withhold','${id}')`)}${btn("Back to the room", "close()")}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,
+    `<div class="eyebrow">${esc(n.role)} • ${esc(n.id === "mira" && !state.knowledge.knives ? "Independent, she says" : n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length && n.id === "mira" && state.world.leak ? "You gave me the road news. I put it to work. That is what I do." : personal || (n.familiar > 1 ? DATA.daily[n.id][state.day - 1] : n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar > 2 ? "Likes " + n.favorite + ". You are becoming familiar." : "Their habits will become familiar in time."}</p>${memory}<div class="actions">${n.id === "mira" ? btn("Share the wagon lead", "choice('share','mira')", !state.knowledge.wagons || state.world.leak) : ""}${n.id === "oren" ? btn("Sell road news · 15 coins", "choice('sell','oren')", !state.knowledge.wagons || state.world.sold) + btn("Use the ledger · 25 coins", "choice('exploit','oren')", !state.knowledge.ledger || state.world.exploited) : ""}${n.id === "nell" ? btn(state.staff.hired ? "Nell is on staff" : "Hire Nell · 12 coins", "choice('hire','nell')", state.staff.hired || state.coins < 12) + btn("Ask what she heard", "choice('report','nell')", !state.staff.hired) : ""}${n.id === "cedric" && q?.resolved ? btn("Ask about the journey", "choice('debrief','cedric')", q.debriefed) : ""}${n.id === "tomas" ? (state.events.search ? btn("Cooperate with the search", "choice('cooperate','tomas')") : "") + btn("Give ledger testimony", "choice('testify','tomas')", !state.knowledge.ledger) : ""}${btn("Keep your confidence", `choice('withhold','${id}')`)}${btn("Back to the room", "closePanel()")}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,
     "talk",
   );
 }
 function choice(v, id) {
   if (state.paused) return;
   doAct(v, id);
-  close();
+  closePanel();
 }
 function board() {
   let q = state.quest,
@@ -1605,7 +1605,7 @@ function board() {
   if (letter) doAct("inspect", "letter");
   panel(
     `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "A pin, a map of Rookcross, and a space where the rest of the world ought to be."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.resolved ? "The party is back in town. Find Cedric when he comes in." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
-<div class="actions">${btn("Read journal", "journal()")}${btn("Back to the room", "close()")}</div>`,
+<div class="actions">${btn("Read journal", "journal()")}${btn("Back to the room", "closePanel()")}</div>`,
     "board",
   );
 }
@@ -1614,11 +1614,11 @@ function dispatch() {
   let opts = {};
   for (let id of ["bram", "supplies", "cautious", "warning"])
     opts[id] = $(id).checked;
-  if (doAct("dispatch", null, opts)) close();
+  if (doAct("dispatch", null, opts)) closePanel();
 }
 function journal(filter = "") {
   panel(
-    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "close()")}</div>`,
+    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}</div>`,
     "journal",
   );
   filterJournal(filter);
@@ -1659,15 +1659,15 @@ function filterJournal(filter) {
 }
 function settings() {
   panel(
-    `<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear ? "checked" : ""} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow ? "checked" : ""} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn("Save now", "state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;close()")}${btn("New week", "confirmReset()")}${btn("Back", "close()")}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,
+    `<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear ? "checked" : ""} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow ? "checked" : ""} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn("Save now", "state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;closePanel()")}${btn("New week", "confirmReset()")}${btn("Back", "closePanel()")}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,
     "settings",
   );
 }
 function confirmReset() {
   panel(
     '<h2>Begin again?</h2><p>This replaces the saved week in this browser.</p><div class="actions">' +
-      btn("Start a fresh week", "state=Sim.fresh();close();welcome()") +
-      btn("Keep this week", "close()") +
+      btn("Start a fresh week", "state=Sim.fresh();closePanel();welcome()") +
+      btn("Keep this week", "closePanel()") +
       "</div>",
     "settings",
   );
@@ -1681,7 +1681,7 @@ function ending() {
       '<div class="actions">' +
       btn("Read your journal", "journal()") +
       btn("Try another week", "confirmReset()") +
-      btn("Look at the room", "close()") +
+      btn("Look at the room", "closePanel()") +
       '</div><p class="muted">End of this vertical slice. Long-term romance, town simulation and construction belong to the future game.</p>',
     "ending",
   );
@@ -1723,11 +1723,11 @@ window.addEventListener("keydown", (e) => {
       return;
     }
     if (k === "escape") {
-      close();
+      closePanel();
       return;
     }
     if (k === "j") {
-      modal === "journal" ? close() : journal();
+      modal === "journal" ? closePanel() : journal();
       return;
     }
     if (k === "e") interact();
@@ -2088,6 +2088,7 @@ function frame(t) {
 }
 welcome();
 requestAnimationFrame(frame);
+
 
 // Optional synthesized ambience; no downloads and no essential audio information.
 let ambienceContext = null;

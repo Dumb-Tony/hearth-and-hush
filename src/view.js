@@ -1,61 +1,599 @@
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),$=id=>document.getElementById(id);
-let state=Sim.fresh(),keys={},modal=null,autosave=0,last=0,started=false,sound=null;
-try{let saved=JSON.parse(localStorage.getItem('hearth-hush-v1'));if(saved?.version===1&&saved.player&&saved.npcs?.length===8&&saved.world&&saved.settings){state=saved;state.paused=false;state.player.path=[];for(let n of state.npcs){n.path=[];n.goal=null}}}catch{}
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function save(){try{localStorage.setItem('hearth-hush-v1',JSON.stringify(state));return true}catch{return false}}
-function panel(html,kind='read'){modal=kind;$('panel').innerHTML=html;$('overlay').style.display='flex'}
-function close(){modal=null;$('overlay').style.display='none';keys={}}
-function btn(label,action,disabled=false){return `<button ${disabled?'disabled':''} onclick="${action}">${label}</button>`}
-function pause(){if(modal==='welcome'||state.ended)return;state.paused=!state.paused;keys={};if(!state.paused&&modal==='journal')close()}
-function doAct(verb,id,opts){const ok=Sim.act(state,verb,id,opts);if(!ok&&!state.paused){state.toast='That needs the right person, place, time, or enough coins.';state.toastTime=4}save();return ok}
-function welcome(){state.paused=true;panel(`<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Keep your own counsel</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time||state.day>1?'Return to the inn':'Unlock the door','startGame()')}</div>`,'welcome')}
-function startGame(){state.player.name=$('keeperName').value.trim()||'Keeper';state.player.color=$('coat').value;state.paused=false;started=true;close();if(state.ended){state.paused=true;ending()}save()}
-function talk(id){let n=Sim.npc(state,id);doAct('talk',id);let memory=n.memory.slice(-3).map(t=>'<p class="muted">'+esc(t)+'</p>').join('');let q=state.quest;let personal=n.id==='oren'&&state.world.sold?'I paid for the news. I would prefer it did not become a public performance.':n.id==='tomas'&&state.events.search?'There has been a complaint about the tollhouse. Will you cooperate, or keep your confidence?':n.id==='cedric'&&q?.resolved?(q.outcome==='proof'?'Bram made us stop before the bridge. We found something you should see.':q.outcome==='compromised'?'The warehouse was stripped. The Reed Knives knew where to look. Who told them?':'The bridge gave way. I am back. I do not especially want to talk about the rest.'):n.id==='bram'&&n.familiar>=2?'The north bridge is rotten. Take rope and use the ridge. Come home before you get brave.':n.id==='tomas'&&n.familiar>=2?'The last wheel tracks turned toward the tollhouse. Willingly, by the look of it. That is a lead, not proof.':null;panel(`<div class="eyebrow">${esc(n.role)} • ${esc(n.id==='mira'&&!state.knowledge.knives?'Independent, she says':n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length&&n.id==='mira'&&state.world.leak?'You gave me the road news. I put it to work. That is what I do.':personal||(n.familiar>1?DATA.daily[n.id][state.day-1]:n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar>2?'Likes '+n.favorite+'. You are becoming familiar.':'Their habits will become familiar in time.'}</p>${memory}<div class="actions">${n.id==='mira'?btn('Share the wagon lead',"choice('share','mira')",!state.knowledge.wagons||state.world.leak):''}${n.id==='oren'?btn('Sell road news · 15 coins',"choice('sell','oren')",!state.knowledge.wagons||state.world.sold)+btn('Use the ledger · 25 coins',"choice('exploit','oren')",!state.knowledge.ledger||state.world.exploited):''}${n.id==='nell'?btn(state.staff.hired?'Nell is on staff':'Hire Nell · 12 coins',"choice('hire','nell')",state.staff.hired||state.coins<12)+btn('Ask what she heard',"choice('report','nell')",!state.staff.hired):''}${n.id==='cedric'&&q?.resolved?btn('Ask about the journey',"choice('debrief','cedric')",q.debriefed):''}${n.id==='tomas'?(state.events.search?btn('Cooperate with the search',"choice('cooperate','tomas')"):'')+btn('Give ledger testimony',"choice('testify','tomas')",!state.knowledge.ledger):''}${btn('Keep your confidence',`choice('withhold','${id}')`)}${btn('Back to the room','close()')}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,'talk')}
-function choice(v,id){if(state.paused)return;doAct(v,id);close()}
-function board(){let q=state.quest,letter=state.evidence.find(e=>e.id==='letter');if(letter)doAct('inspect','letter');panel(`<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter?esc(letter.text):'A pin, a map of Rookcross, and a space where the rest of the world ought to be.'}</p>${q?`<h3>Blackwood tollhouse</h3><p>${q.resolved?'The party is back in town. Find Cedric when he comes in.':'Cedric'+(q.bram?' and Bram':'')+' left on day '+q.departDay+'. They expected two days on the road.'}</p>`:`<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning?'checked':'disabled'}> Share Bram's ridge-route warning ${state.knowledge.warning?'':'(not learned)'}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn('Agree and send them',"dispatch()",!state.knowledge.wagons||state.day>4)}`}
-<div class="actions">${btn('Read journal','journal()')}${btn('Back to the room','close()')}</div>`,'board')}
-function dispatch(){if(state.paused)return;let opts={};for(let id of ['bram','supplies','cautious','warning'])opts[id]=$(id).checked;if(doAct('dispatch',null,opts))close()}
-function journal(filter=''){panel(`<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn('Back to the room','close()')}</div>`,'journal');filterJournal(filter)}
-function filterJournal(filter){let f=filter.toLowerCase(),entries=Object.values(state.knowledge).filter(k=>JSON.stringify(k).toLowerCase().includes(f)||JSON.stringify(DATA.rumors[k.id]).toLowerCase().includes(f));$('entries').innerHTML=entries.map(k=>`<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map(o=>`Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join('<br>')}<br>Known to you: ${[...new Set(k.knownBy)].map(esc).join(', ')}</p></article>`).join('')+(!entries.length?'<p>No matching notes. Begin with the people in the room.</p>':'')+'<h3>People & choices</h3>'+state.notes.filter(n=>n.text.toLowerCase().includes(f)).map(n=>`<p class="muted">Day ${n.day} — ${esc(n.text)}</p>`).join('')+Object.entries(state.relationships).filter(([k,v])=>(k+v).includes(f)&&k.split(':').every(id=>Sim.npc(state,id).familiar>0)).map(([k,v])=>`<p class="muted">${esc(k.replace(':',' & '))}: ${esc(v)}</p>`).join('')}
-function settings(){panel(`<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear?'checked':''} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow?'checked':''} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn('Save now',"state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;close()")}${btn('New week','confirmReset()')}${btn('Back','close()')}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,'settings')}
-function confirmReset(){panel('<h2>Begin again?</h2><p>This replaces the saved week in this browser.</p><div class="actions">'+btn('Start a fresh week',"state=Sim.fresh();close();welcome()")+btn('Keep this week','close()')+'</div>','settings')}
-function ending(){panel('<div class="eyebrow">Seven days at Rookcross</div><h2>The door will open again.</h2>'+Sim.summary(state).map(s=>'<p>'+esc(s)+'</p>').join('')+'<div class="actions">'+btn('Read your journal','journal()')+btn('Try another week','confirmReset()')+btn('Look at the room','close()')+'</div><p class="muted">End of this vertical slice. Long-term romance, town simulation and construction belong to the future game.</p>','ending')}
-function interact(){if(state.paused||modal)return;let n=Sim.nearNpc(state),st=Sim.nearStation(state),e=state.evidence.find(e=>Sim.dist(e,state.player)<65);if(n&&state.player.carry){doAct('serve',n.id);return}if(e&&e.id==='spill'){doAct('inspect',e.id);return}if(st&&(!n||Sim.dist(st,state.player)<Sim.dist(n,state.player))){if(st.id==='board')board();else if(st.id==='bed'){if(!doAct('sleep')){state.toast='Closing comes near the end of the day. There is time to listen.';state.toastTime=5}}else if(st.id==='room'||st.id==='hearth')doAct('inspect',st.id);return}if(n)talk(n.id)}
-window.addEventListener('keydown',e=>{if(e.target.matches('input,select'))return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();let k=e.key.toLowerCase();if(!e.repeat){if(k===' '){if(modal!=='welcome'&&!state.ended)pause();return}if(k==='escape'){close();return}if(k==='j'){modal==='journal'?close():journal();return}if(k==='e')interact();if(k==='x'&&!modal)doAct('discard')}keys[k]=true});
-window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEventListener('blur',()=>{keys={};if(started)state.paused=true;save()});
-canvas.addEventListener('pointerdown',e=>{if(state.paused||modal)return;let r=canvas.getBoundingClientRect(),p={x:(e.clientX-r.left)*1000/r.width,y:(e.clientY-r.top)*660/r.height};if(!Sim.blocked(p.x,p.y))state.player.path=Sim.route(state.player,p)});
-function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
-function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill()}
-function text(t,x,y,size=13,color='#ddd1b5',align='center'){ctx.font=`${size}px Georgia`;ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(t,x,y)}
-function bubble(t,x,y,color='#d9d3b7'){ctx.font='14px Georgia';let w=Math.min(370,ctx.measureText(t).width+22);rect(x-w/2,y-22,w,29,'#1d2b28ed');text(t,x,y-3,14,color)}
-function person(n,isPlayer=false){let moving=n.path?.length,walk=moving?Math.sin(performance.now()/95)*3:0;ellipse(n.x,n.y+9,17,8,'#0005');rect(n.x-9,n.y+2,6,10+walk,'#282828');rect(n.x+3,n.y+2,6,10-walk,'#282828');ellipse(n.x,n.y-4,n.id==='bram'?16:12,17,n.color);ellipse(n.x,n.y-21,9,10,'#d4ad80');ellipse(n.x,n.y-26,10,6,n.hair||'#3e3430');if(n.id==='bram')ellipse(n.x,n.y-14,9,9,n.hair);if(n.id==='ivo'){ctx.fillStyle=n.color;ctx.beginPath();ctx.moveTo(n.x-13,n.y-24);ctx.lineTo(n.x+3,n.y-50);ctx.lineTo(n.x+13,n.y-24);ctx.fill()}if(n.id==='tomas')rect(n.x-11,n.y-28,22,5,'#a6b6b4');if(isPlayer){ctx.strokeStyle='#eed7a0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(n.x,n.y+10,21,11,0,0,7);ctx.stroke();rect(n.x-7,n.y-5,14,16,'#d5c4a0')}if(n.served||isPlayer&&n.carry){rect(n.x+13,n.y-9,8,10,'#c4994a');rect(n.x+13,n.y-10,8,3,'#efe1bc')}if(n.id==='cedric'&&state.quest?.outcome==='injured')rect(n.x-11,n.y-5,21,4,'#ded8bd');text(isPlayer?state.player.name:n.name,n.x,n.y+29,13,isPlayer?'#ffe6ad':'#e0d4bd')}
-function draw(){ctx.clearRect(0,0,1000,660);rect(0,0,1000,660,'#19282c');for(let i=0;i<45;i++){let x=(i*73+performance.now()*.015)%1000,y=(i*43+performance.now()*.09)%660;ctx.strokeStyle='#a6c0bf15';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-4,y+13);ctx.stroke()}
- rect(30,30,930,600,'#282c28');rect(44,44,900,572,'#65503a');for(let y=48;y<617;y+=23){rect(44,y,900,1,'#302b2580');for(let x=44+(Math.floor(y/23)%2)*54;x<941;x+=110)rect(x,y,1,22,'#382f2870')}for(let i=0;i<90;i++){let x=60+(i*131)%850,y=65+(i*79)%535;rect(x,y,22,1,'#ad885020')}
- rect(45,45,348,139,'#3b453d');rect(728,49,212,287,'#4a463c');rect(750,180,172,147,'#6c5141');rect(230,325,450,262,'#4c3e34');ctx.strokeStyle='#89704a';ctx.lineWidth=2;ctx.strokeRect(240,335,430,242);for(let x=251;x<655;x+=23){rect(x,340,8,3,'#b0985b60');rect(x,568,8,3,'#b0985b60')}
- for(let o of DATA.walls){rect(o.x-3,o.y,o.w+6,o.h+4,'#252c27');rect(o.x,o.y,o.w,o.h,'#897457');rect(o.x+3,o.y+3,Math.max(2,o.w-6),Math.max(2,o.h-6),'#584832')}
- for(let f of DATA.furniture){rect(f.x-3,f.y+6,f.w+6,f.h,'#0004');rect(f.x,f.y,f.w,f.h,'#463428');rect(f.x+4,f.y+3,f.w-8,f.h-7,f.type==='bed'?'#999276':'#977046');for(let y=f.y+11;y<f.y+f.h-6;y+=12)rect(f.x+5,y,f.w-10,1,'#37291e50');if(f.type==='bed')rect(f.x+6,f.y+7,26,f.h-15,'#d0c4a2');if(f.type==='table'){ellipse(f.x+f.w/2,f.y+14,7,5,'#ccb993');rect(f.x+20,f.y+12,6,10,'#bd8f43');rect(f.x+f.w-27,f.y+15,6,10,'#bd8f43');for(let x of [f.x+12,f.x+f.w-24]){rect(x,f.y-19,19,11,'#493929');rect(x,f.y+f.h+8,19,11,'#493929')}}}
- // Quiet signs of a once-beautiful working inn.
-for(let x of [195,687]){rect(x,52,10,128,'#322e26');rect(x-4,68,18,12,'#746044');rect(x+2,54,2,123,'#ba946633')}
-for(let x of [330,630]){rect(x,44,62,9,'#2c3330');rect(x+5,45,52,5,'#708b8870')}
-for(let p of [[195,210],[685,210],[905,375],[225,570]]){ellipse(p[0],p[1],38,27,'#eeb7660b');rect(p[0]-5,p[1]-7,10,15,'#c8a457');rect(p[0]-2,p[1]-4,4,8,'#ffe4a4')}
-for(let i=0;i<5;i++)rect(253+i*13,77,9,27-i%2*6,['#647973','#b7955e','#a5654e'][i%3]);rect(313,107,26,13,'#daca9e');rect(318,110,15,1,'#77654d');
-for(let p of [[356,395],[560,395],[685,510],[810,281]]){ellipse(p[0],p[1],8,5,'#8f9b8633');rect(p[0]-2,p[1]-9,4,10,'#e0c995');ellipse(p[0],p[1]-10,2,4,'#ffe3a0')}
-for(let i=0;i<6;i++){rect(580+i*15,92,9,3,'#84744b');rect(583+i*15,95,3,6,'#84744b')}
-rect(190,480,22,50,'#655e49');for(let i=0;i<4;i++)rect(188,486+i*10,26,2,'#32382d');ellipse(200,477,13,6,'#909177');
-// Hearth, casks, books and the room's old structural details.
- rect(460,45,104,54,'#969083');rect(470,48,84,41,'#302d25');for(let i=0;i<9;i++){let h=15+Math.sin(performance.now()/220+i*4)*10;ellipse(480+i*8,83-h/2,5,h/2,i%2?'#edb458':'#c5713f')}
- let glow=ctx.createRadialGradient(510,88,5,510,88,180);glow.addColorStop(0,'#edaf5826');glow.addColorStop(1,'#edaf5800');ctx.fillStyle=glow;ctx.fillRect(325,40,370,230);
- for(let st of DATA.stations.filter(s=>['ale','wine','tea'].includes(s.id))){ellipse(st.x,st.y,20,18,st.id==='tea'?'#879087':'#927047');ctx.strokeStyle='#342e25';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(st.x,st.y,16,15,0,0,7);ctx.stroke();rect(st.x+14,st.y-2,12,5,'#c6aa6e');text(st.id,st.x,st.y+29,11)}ellipse(120,440,23,19,'#343d37');ellipse(120,437,18,12,'#b48746');text('stew',120,472,11);rect(95,75,35,53,'#9a8b6b');rect(97,78,31,12,'#d5c7a0');rect(268,135,26,21,'#e0cd9e');text('OFFICE',300,58,11,'#c4bd9b');text('ROOM TWO',835,60,11,'#c4bd9b');text('PRIVATE BOOTH',830,320,10,'#c4bd9b');text('ROOKCROSS',500,647,12,'#a8b7ad');rect(445,610,90,20,'#34372e');text('front door',490,629,11,'#a5a58a');text('back door',922,218,10,'#c4bd9b');
- for(let e of state.evidence){if(e.id==='spill'){ellipse(e.x,e.y,21,12,'#8b72a777');for(let j=0;j<4;j++)ellipse(e.x+j*12,e.y-j*7,3,2,'#987ca8')}else{rect(e.x-10,e.y-7,20,14,'#e9d6a7')}}
- for(let n of [...state.npcs.filter(n=>n.present&&Sim.line(state.player,n)),{...state.player,isPlayer:true}].sort((a,b)=>a.y-b.y))person(n,n.isPlayer);
- let best=null;for(let t of Sim.activeTalks(state)){let p=Sim.perceive(state,t),n=Sim.npc(state,t.a),h=state.heard[t.id];if(p.tier===1){text(state.settings.clear?'speaking':'···',n.x,n.y-46,state.settings.clear?13:18,'#e9dabc')}if(p.tier===2)bubble(t.fragment,n.x,n.y-45);if(p.tier===3){text(t.whisper?'…':'···',n.x,n.y-46,20,'#ead6a5');if(!best||h?.dwell>best.dwell)best={t,dwell:h?.dwell||0}}}
- $('caption').style.display=best?'block':'none';if(best)$('caption').textContent=best.dwell>=3?best.t.line:best.t.fragment+' (linger nearby)';
- let near=Sim.nearNpc(state),st=Sim.nearStation(state);let hint=state.paused?'PAUSED · inspect freely · Space to resume':state.player.carry?`Carrying ${state.player.carry} · E near a guest · X to set down`:near?`E · Talk to ${near.name}`:st?(['ale','wine','tea','stew'].includes(st.id)?`Hold E · Prepare ${st.id}`:`E · ${st.name}`):'Walk close. Listen a little longer.';
- rect(260,5,480,28,'#102020d9');text(hint,500,24,14,'#ead7ae');
- if(state.pour>0){rect(state.player.x-15,state.player.y+36,30,3,'#272d28');rect(state.player.x-15,state.player.y+36,30*state.pour/.65,3,'#e7c578')}
- let phase=state.time<35?'Morning':state.time<110?'Afternoon':state.time<145?'Evening':'Closing';$('status').innerHTML=`<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><br>${DATA.dayNames[state.day-1]} &nbsp; · &nbsp; ${state.coins} coins`;$('pause').textContent=state.paused?'Resume':'Pause';$('toast').textContent=state.toastTime>0?state.toast:state.staff.hired?'Nell has the public tables. You have a little more room to listen.':'A warm room. Eight lives. You cannot be everywhere.';
- if(state.paused&&modal!=='welcome'){rect(45,45,900,571,'#15222330');text(state.ended?'WEEK COMPLETE':'PAUSED',500,312,32,'#ffebbc')}
- if(modal){for(let b of $('panel').querySelectorAll('button')){if(/choice\(|dispatch\(/.test(b.getAttribute('onclick')||'')){if(!('originalDisabled' in b.dataset))b.dataset.originalDisabled=String(b.disabled);b.disabled=state.paused||b.dataset.originalDisabled==='true'}}}
+const canvas = document.getElementById("game"),
+  ctx = canvas.getContext("2d"),
+  $ = (id) => document.getElementById(id);
+let state = Sim.fresh(),
+  keys = {},
+  modal = null,
+  autosave = 0,
+  last = 0,
+  started = false,
+  sound = null;
+try {
+  state = Sim.restore(localStorage.getItem("hearth-hush-v1"));
+} catch {}
+const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+function save() {
+  try {
+    localStorage.setItem("hearth-hush-v1", JSON.stringify(state));
+    return true;
+  } catch {
+    return false;
+  }
 }
-function frame(t){let dt=Math.min(.1,(t-last)/1000||0);last=t;let wasEnded=state.ended;Sim.tick(state,dt,modal?{}:{up:keys.w||keys.arrowup,down:keys.s||keys.arrowdown,left:keys.a||keys.arrowleft,right:keys.d||keys.arrowright,interact:keys.e});if(state.ended&&!wasEnded)ending();autosave+=dt;if(autosave>8){save();autosave=0}draw();requestAnimationFrame(frame)}
-welcome();requestAnimationFrame(frame);
+function panel(html, kind = "read") {
+  modal = kind;
+  $("panel").innerHTML = html;
+  $("overlay").style.display = "flex";
+}
+function close() {
+  modal = null;
+  $("overlay").style.display = "none";
+  keys = {};
+}
+function btn(label, action, disabled = false) {
+  return `<button ${disabled ? "disabled" : ""} onclick="${action}">${label}</button>`;
+}
+function pause() {
+  if (modal === "welcome" || state.ended) return;
+  state.paused = !state.paused;
+  keys = {};
+  if (!state.paused && modal === "journal") close();
+}
+function doAct(verb, id, opts) {
+  const ok = Sim.act(state, verb, id, opts);
+  if (!ok && !state.paused) {
+    state.toast = "That needs the right person, place, time, or enough coins.";
+    state.toastTime = 4;
+  }
+  save();
+  return ok;
+}
+function welcome() {
+  state.paused = true;
+  panel(
+    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Keep your own counsel</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
+    "welcome",
+  );
+}
+function startGame() {
+  state.player.name = $("keeperName").value.trim() || "Keeper";
+  state.player.color = $("coat").value;
+  state.paused = false;
+  started = true;
+  close();
+  if (state.ended) {
+    state.paused = true;
+    ending();
+  }
+  save();
+}
+function talk(id) {
+  let n = Sim.npc(state, id);
+  doAct("talk", id);
+  let memory = n.memory
+    .slice(-3)
+    .map((t) => '<p class="muted">' + esc(t) + "</p>")
+    .join("");
+  let q = state.quest;
+  let personal =
+    n.id === "oren" && state.world.sold
+      ? "I paid for the news. I would prefer it did not become a public performance."
+      : n.id === "tomas" && state.events.search
+        ? "There has been a complaint about the tollhouse. Will you cooperate, or keep your confidence?"
+        : n.id === "cedric" && q?.resolved
+          ? q.outcome === "proof"
+            ? "Bram made us stop before the bridge. We found something you should see."
+            : q.outcome === "compromised"
+              ? "The warehouse was stripped. The Reed Knives knew where to look. Who told them?"
+              : "The bridge gave way. I am back. I do not especially want to talk about the rest."
+          : n.id === "bram" && n.familiar >= 2
+            ? "The north bridge is rotten. Take rope and use the ridge. Come home before you get brave."
+            : n.id === "tomas" && n.familiar >= 2
+              ? "The last wheel tracks turned toward the tollhouse. Willingly, by the look of it. That is a lead, not proof."
+              : null;
+  panel(
+    `<div class="eyebrow">${esc(n.role)} • ${esc(n.id === "mira" && !state.knowledge.knives ? "Independent, she says" : n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length && n.id === "mira" && state.world.leak ? "You gave me the road news. I put it to work. That is what I do." : personal || (n.familiar > 1 ? DATA.daily[n.id][state.day - 1] : n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar > 2 ? "Likes " + n.favorite + ". You are becoming familiar." : "Their habits will become familiar in time."}</p>${memory}<div class="actions">${n.id === "mira" ? btn("Share the wagon lead", "choice('share','mira')", !state.knowledge.wagons || state.world.leak) : ""}${n.id === "oren" ? btn("Sell road news · 15 coins", "choice('sell','oren')", !state.knowledge.wagons || state.world.sold) + btn("Use the ledger · 25 coins", "choice('exploit','oren')", !state.knowledge.ledger || state.world.exploited) : ""}${n.id === "nell" ? btn(state.staff.hired ? "Nell is on staff" : "Hire Nell · 12 coins", "choice('hire','nell')", state.staff.hired || state.coins < 12) + btn("Ask what she heard", "choice('report','nell')", !state.staff.hired) : ""}${n.id === "cedric" && q?.resolved ? btn("Ask about the journey", "choice('debrief','cedric')", q.debriefed) : ""}${n.id === "tomas" ? (state.events.search ? btn("Cooperate with the search", "choice('cooperate','tomas')") : "") + btn("Give ledger testimony", "choice('testify','tomas')", !state.knowledge.ledger) : ""}${btn("Keep your confidence", `choice('withhold','${id}')`)}${btn("Back to the room", "close()")}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,
+    "talk",
+  );
+}
+function choice(v, id) {
+  if (state.paused) return;
+  doAct(v, id);
+  close();
+}
+function board() {
+  let q = state.quest,
+    letter = state.evidence.find((e) => e.id === "letter");
+  if (letter) doAct("inspect", "letter");
+  panel(
+    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "A pin, a map of Rookcross, and a space where the rest of the world ought to be."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.resolved ? "The party is back in town. Find Cedric when he comes in." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
+<div class="actions">${btn("Read journal", "journal()")}${btn("Back to the room", "close()")}</div>`,
+    "board",
+  );
+}
+function dispatch() {
+  if (state.paused) return;
+  let opts = {};
+  for (let id of ["bram", "supplies", "cautious", "warning"])
+    opts[id] = $(id).checked;
+  if (doAct("dispatch", null, opts)) close();
+}
+function journal(filter = "") {
+  panel(
+    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "close()")}</div>`,
+    "journal",
+  );
+  filterJournal(filter);
+}
+function filterJournal(filter) {
+  let f = filter.toLowerCase(),
+    entries = Object.values(state.knowledge).filter(
+      (k) =>
+        JSON.stringify(k).toLowerCase().includes(f) ||
+        JSON.stringify(DATA.rumors[k.id]).toLowerCase().includes(f),
+    );
+  $("entries").innerHTML =
+    entries
+      .map(
+        (k) =>
+          `<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map((o) => `Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join("<br>")}<br>Known to you: ${[...new Set(k.knownBy)].map(esc).join(", ")}</p></article>`,
+      )
+      .join("") +
+    (!entries.length
+      ? "<p>No matching notes. Begin with the people in the room.</p>"
+      : "") +
+    "<h3>People & choices</h3>" +
+    state.notes
+      .filter((n) => n.text.toLowerCase().includes(f))
+      .map((n) => `<p class="muted">Day ${n.day} — ${esc(n.text)}</p>`)
+      .join("") +
+    Object.entries(state.relationships)
+      .filter(
+        ([k, v]) =>
+          (k + v).includes(f) &&
+          k.split(":").every((id) => Sim.npc(state, id).familiar > 0),
+      )
+      .map(
+        ([k, v]) =>
+          `<p class="muted">${esc(k.replace(":", " & "))}: ${esc(v)}</p>`,
+      )
+      .join("");
+}
+function settings() {
+  panel(
+    `<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear ? "checked" : ""} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow ? "checked" : ""} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn("Save now", "state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;close()")}${btn("New week", "confirmReset()")}${btn("Back", "close()")}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,
+    "settings",
+  );
+}
+function confirmReset() {
+  panel(
+    '<h2>Begin again?</h2><p>This replaces the saved week in this browser.</p><div class="actions">' +
+      btn("Start a fresh week", "state=Sim.fresh();close();welcome()") +
+      btn("Keep this week", "close()") +
+      "</div>",
+    "settings",
+  );
+}
+function ending() {
+  panel(
+    '<div class="eyebrow">Seven days at Rookcross</div><h2>The door will open again.</h2>' +
+      Sim.summary(state)
+        .map((s) => "<p>" + esc(s) + "</p>")
+        .join("") +
+      '<div class="actions">' +
+      btn("Read your journal", "journal()") +
+      btn("Try another week", "confirmReset()") +
+      btn("Look at the room", "close()") +
+      '</div><p class="muted">End of this vertical slice. Long-term romance, town simulation and construction belong to the future game.</p>',
+    "ending",
+  );
+}
+function interact() {
+  if (state.paused || modal) return;
+  let n = Sim.nearNpc(state),
+    st = Sim.nearStation(state),
+    e = state.evidence.find((e) => Sim.dist(e, state.player) < 65);
+  if (n && state.player.carry) {
+    doAct("serve", n.id);
+    return;
+  }
+  if (e && e.id === "spill") {
+    doAct("inspect", e.id);
+    return;
+  }
+  if (st && (!n || Sim.dist(st, state.player) < Sim.dist(n, state.player))) {
+    if (st.id === "board") board();
+    else if (st.id === "bed") {
+      if (!doAct("sleep")) {
+        state.toast =
+          "Closing comes near the end of the day. There is time to listen.";
+        state.toastTime = 5;
+      }
+    } else if (st.id === "room" || st.id === "hearth") doAct("inspect", st.id);
+    return;
+  }
+  if (n) talk(n.id);
+}
+window.addEventListener("keydown", (e) => {
+  if (e.target.matches("input,select")) return;
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key))
+    e.preventDefault();
+  let k = e.key.toLowerCase();
+  if (!e.repeat) {
+    if (k === " ") {
+      if (modal !== "welcome" && !state.ended) pause();
+      return;
+    }
+    if (k === "escape") {
+      close();
+      return;
+    }
+    if (k === "j") {
+      modal === "journal" ? close() : journal();
+      return;
+    }
+    if (k === "e") interact();
+    if (k === "x" && !modal) doAct("discard");
+  }
+  keys[k] = true;
+});
+window.addEventListener("keyup", (e) => (keys[e.key.toLowerCase()] = false));
+window.addEventListener("blur", () => {
+  keys = {};
+  if (started) state.paused = true;
+  save();
+});
+canvas.addEventListener("pointerdown", (e) => {
+  if (state.paused || modal) return;
+  let r = canvas.getBoundingClientRect(),
+    p = {
+      x: ((e.clientX - r.left) * 1000) / r.width,
+      y: ((e.clientY - r.top) * 660) / r.height,
+    };
+  if (!Sim.blocked(p.x, p.y)) state.player.path = Sim.route(state.player, p);
+});
+function rect(x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x, y, w, h);
+}
+function ellipse(x, y, rx, ry, c) {
+  ctx.fillStyle = c;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+function text(t, x, y, size = 13, color = "#ddd1b5", align = "center") {
+  ctx.font = `${size}px Georgia`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.fillText(t, x, y);
+}
+function bubble(t, x, y, color = "#d9d3b7") {
+  ctx.font = "14px Georgia";
+  let w = Math.min(370, ctx.measureText(t).width + 22);
+  rect(x - w / 2, y - 22, w, 29, "#1d2b28ed");
+  text(t, x, y - 3, 14, color);
+}
+function person(n, isPlayer = false) {
+  let moving = n.path?.length,
+    walk = moving ? Math.sin(performance.now() / 95) * 3 : 0;
+  ellipse(n.x, n.y + 9, 17, 8, "#0005");
+  rect(n.x - 9, n.y + 2, 6, 10 + walk, "#282828");
+  rect(n.x + 3, n.y + 2, 6, 10 - walk, "#282828");
+  ellipse(n.x, n.y - 4, n.id === "bram" ? 16 : 12, 17, n.color);
+  ellipse(n.x, n.y - 21, 9, 10, "#d4ad80");
+  ellipse(n.x, n.y - 26, 10, 6, n.hair || "#3e3430");
+  if (n.id === "bram") ellipse(n.x, n.y - 14, 9, 9, n.hair);
+  if (n.id === "ivo") {
+    ctx.fillStyle = n.color;
+    ctx.beginPath();
+    ctx.moveTo(n.x - 13, n.y - 24);
+    ctx.lineTo(n.x + 3, n.y - 50);
+    ctx.lineTo(n.x + 13, n.y - 24);
+    ctx.fill();
+  }
+  if (n.id === "tomas") rect(n.x - 11, n.y - 28, 22, 5, "#a6b6b4");
+  if (isPlayer) {
+    ctx.strokeStyle = "#eed7a0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(n.x, n.y + 10, 21, 11, 0, 0, 7);
+    ctx.stroke();
+    rect(n.x - 7, n.y - 5, 14, 16, "#d5c4a0");
+  }
+  if (n.served || (isPlayer && n.carry)) {
+    rect(n.x + 13, n.y - 9, 8, 10, "#c4994a");
+    rect(n.x + 13, n.y - 10, 8, 3, "#efe1bc");
+  }
+  if (n.id === "cedric" && state.quest?.outcome === "injured")
+    rect(n.x - 11, n.y - 5, 21, 4, "#ded8bd");
+  text(
+    isPlayer ? state.player.name : n.name,
+    n.x,
+    n.y + 29,
+    13,
+    isPlayer ? "#ffe6ad" : "#e0d4bd",
+  );
+}
+function draw() {
+  ctx.clearRect(0, 0, 1000, 660);
+  rect(0, 0, 1000, 660, "#19282c");
+  for (let i = 0; i < 45; i++) {
+    let x = (i * 73 + performance.now() * 0.015) % 1000,
+      y = (i * 43 + performance.now() * 0.09) % 660;
+    ctx.strokeStyle = "#a6c0bf15";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 4, y + 13);
+    ctx.stroke();
+  }
+  rect(30, 30, 930, 600, "#282c28");
+  rect(44, 44, 900, 572, "#65503a");
+  for (let y = 48; y < 617; y += 23) {
+    rect(44, y, 900, 1, "#302b2580");
+    for (let x = 44 + (Math.floor(y / 23) % 2) * 54; x < 941; x += 110)
+      rect(x, y, 1, 22, "#382f2870");
+  }
+  for (let i = 0; i < 90; i++) {
+    let x = 60 + ((i * 131) % 850),
+      y = 65 + ((i * 79) % 535);
+    rect(x, y, 22, 1, "#ad885020");
+  }
+  rect(45, 45, 348, 139, "#3b453d");
+  rect(728, 49, 212, 287, "#4a463c");
+  rect(750, 180, 172, 147, "#6c5141");
+  rect(230, 325, 450, 262, "#4c3e34");
+  ctx.strokeStyle = "#89704a";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(240, 335, 430, 242);
+  for (let x = 251; x < 655; x += 23) {
+    rect(x, 340, 8, 3, "#b0985b60");
+    rect(x, 568, 8, 3, "#b0985b60");
+  }
+  for (let o of DATA.walls) {
+    rect(o.x - 3, o.y, o.w + 6, o.h + 4, "#252c27");
+    rect(o.x, o.y, o.w, o.h, "#897457");
+    rect(
+      o.x + 3,
+      o.y + 3,
+      Math.max(2, o.w - 6),
+      Math.max(2, o.h - 6),
+      "#584832",
+    );
+  }
+  for (let f of DATA.furniture) {
+    rect(f.x - 3, f.y + 6, f.w + 6, f.h, "#0004");
+    rect(f.x, f.y, f.w, f.h, "#463428");
+    rect(
+      f.x + 4,
+      f.y + 3,
+      f.w - 8,
+      f.h - 7,
+      f.type === "bed" ? "#999276" : "#977046",
+    );
+    for (let y = f.y + 11; y < f.y + f.h - 6; y += 12)
+      rect(f.x + 5, y, f.w - 10, 1, "#37291e50");
+    if (f.type === "bed") rect(f.x + 6, f.y + 7, 26, f.h - 15, "#d0c4a2");
+    if (f.type === "table") {
+      ellipse(f.x + f.w / 2, f.y + 14, 7, 5, "#ccb993");
+      rect(f.x + 20, f.y + 12, 6, 10, "#bd8f43");
+      rect(f.x + f.w - 27, f.y + 15, 6, 10, "#bd8f43");
+      for (let x of [f.x + 12, f.x + f.w - 24]) {
+        rect(x, f.y - 19, 19, 11, "#493929");
+        rect(x, f.y + f.h + 8, 19, 11, "#493929");
+      }
+    }
+  }
+  // Quiet signs of a once-beautiful working inn.
+  for (let x of [195, 687]) {
+    rect(x, 52, 10, 128, "#322e26");
+    rect(x - 4, 68, 18, 12, "#746044");
+    rect(x + 2, 54, 2, 123, "#ba946633");
+  }
+  for (let x of [330, 630]) {
+    rect(x, 44, 62, 9, "#2c3330");
+    rect(x + 5, 45, 52, 5, "#708b8870");
+  }
+  for (let p of [
+    [195, 210],
+    [685, 210],
+    [905, 375],
+    [225, 570],
+  ]) {
+    ellipse(p[0], p[1], 38, 27, "#eeb7660b");
+    rect(p[0] - 5, p[1] - 7, 10, 15, "#c8a457");
+    rect(p[0] - 2, p[1] - 4, 4, 8, "#ffe4a4");
+  }
+  for (let i = 0; i < 5; i++)
+    rect(
+      253 + i * 13,
+      77,
+      9,
+      27 - (i % 2) * 6,
+      ["#647973", "#b7955e", "#a5654e"][i % 3],
+    );
+  rect(313, 107, 26, 13, "#daca9e");
+  rect(318, 110, 15, 1, "#77654d");
+  for (let p of [
+    [356, 395],
+    [560, 395],
+    [685, 510],
+    [810, 281],
+  ]) {
+    ellipse(p[0], p[1], 8, 5, "#8f9b8633");
+    rect(p[0] - 2, p[1] - 9, 4, 10, "#e0c995");
+    ellipse(p[0], p[1] - 10, 2, 4, "#ffe3a0");
+  }
+  for (let i = 0; i < 6; i++) {
+    rect(580 + i * 15, 92, 9, 3, "#84744b");
+    rect(583 + i * 15, 95, 3, 6, "#84744b");
+  }
+  rect(190, 480, 22, 50, "#655e49");
+  for (let i = 0; i < 4; i++) rect(188, 486 + i * 10, 26, 2, "#32382d");
+  ellipse(200, 477, 13, 6, "#909177");
+  // Hearth, casks, books and the room's old structural details.
+  rect(460, 45, 104, 54, "#969083");
+  rect(470, 48, 84, 41, "#302d25");
+  for (let i = 0; i < 9; i++) {
+    let h = 15 + Math.sin(performance.now() / 220 + i * 4) * 10;
+    ellipse(480 + i * 8, 83 - h / 2, 5, h / 2, i % 2 ? "#edb458" : "#c5713f");
+  }
+  let glow = ctx.createRadialGradient(510, 88, 5, 510, 88, 180);
+  glow.addColorStop(0, "#edaf5826");
+  glow.addColorStop(1, "#edaf5800");
+  ctx.fillStyle = glow;
+  ctx.fillRect(325, 40, 370, 230);
+  for (let st of DATA.stations.filter((s) =>
+    ["ale", "wine", "tea"].includes(s.id),
+  )) {
+    ellipse(st.x, st.y, 20, 18, st.id === "tea" ? "#879087" : "#927047");
+    ctx.strokeStyle = "#342e25";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(st.x, st.y, 16, 15, 0, 0, 7);
+    ctx.stroke();
+    rect(st.x + 14, st.y - 2, 12, 5, "#c6aa6e");
+    text(st.id, st.x, st.y + 29, 11);
+  }
+  ellipse(120, 440, 23, 19, "#343d37");
+  ellipse(120, 437, 18, 12, "#b48746");
+  text("stew", 120, 472, 11);
+  rect(95, 75, 35, 53, "#9a8b6b");
+  rect(97, 78, 31, 12, "#d5c7a0");
+  rect(268, 135, 26, 21, "#e0cd9e");
+  text("OFFICE", 300, 58, 11, "#c4bd9b");
+  text("ROOM TWO", 835, 60, 11, "#c4bd9b");
+  text("PRIVATE BOOTH", 830, 320, 10, "#c4bd9b");
+  text("ROOKCROSS", 500, 647, 12, "#a8b7ad");
+  rect(445, 610, 90, 20, "#34372e");
+  text("front door", 490, 629, 11, "#a5a58a");
+  text("back door", 922, 218, 10, "#c4bd9b");
+  for (let e of state.evidence) {
+    if (e.id === "spill") {
+      ellipse(e.x, e.y, 21, 12, "#8b72a777");
+      for (let j = 0; j < 4; j++)
+        ellipse(e.x + j * 12, e.y - j * 7, 3, 2, "#987ca8");
+    } else {
+      rect(e.x - 10, e.y - 7, 20, 14, "#e9d6a7");
+    }
+  }
+  for (let n of [
+    ...state.npcs.filter((n) => n.present && Sim.line(state.player, n)),
+    { ...state.player, isPlayer: true },
+  ].sort((a, b) => a.y - b.y))
+    person(n, n.isPlayer);
+  let best = null;
+  for (let t of Sim.activeTalks(state)) {
+    let p = Sim.perceive(state, t),
+      n = Sim.npc(state, t.a),
+      h = state.heard[t.id];
+    if (p.tier === 1) {
+      text(
+        state.settings.clear ? "speaking" : "···",
+        n.x,
+        n.y - 46,
+        state.settings.clear ? 13 : 18,
+        "#e9dabc",
+      );
+    }
+    if (p.tier === 2) bubble(t.fragment, n.x, n.y - 45);
+    if (p.tier === 3) {
+      text(t.whisper ? "…" : "···", n.x, n.y - 46, 20, "#ead6a5");
+      if (!best || h?.dwell > best.dwell) best = { t, dwell: h?.dwell || 0 };
+    }
+  }
+  $("caption").style.display = best ? "block" : "none";
+  if (best)
+    $("caption").textContent =
+      best.dwell >= 3 ? best.t.line : best.t.fragment + " (linger nearby)";
+  let near = Sim.nearNpc(state),
+    st = Sim.nearStation(state);
+  let hint = state.paused
+    ? "PAUSED · inspect freely · Space to resume"
+    : state.player.carry
+      ? `Carrying ${state.player.carry} · E near a guest · X to set down`
+      : near
+        ? `E · Talk to ${near.name}`
+        : st
+          ? ["ale", "wine", "tea", "stew"].includes(st.id)
+            ? `Hold E · Prepare ${st.id}`
+            : `E · ${st.name}`
+          : "Walk close. Listen a little longer.";
+  rect(260, 5, 480, 28, "#102020d9");
+  text(hint, 500, 24, 14, "#ead7ae");
+  if (state.pour > 0) {
+    rect(state.player.x - 15, state.player.y + 36, 30, 3, "#272d28");
+    rect(
+      state.player.x - 15,
+      state.player.y + 36,
+      (30 * state.pour) / 0.65,
+      3,
+      "#e7c578",
+    );
+  }
+  let phase =
+    state.time < 35
+      ? "Morning"
+      : state.time < 110
+        ? "Afternoon"
+        : state.time < 145
+          ? "Evening"
+          : "Closing";
+  $("status").innerHTML =
+    `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><br>${DATA.dayNames[state.day - 1]} &nbsp; · &nbsp; ${state.coins} coins`;
+  $("pause").textContent = state.paused ? "Resume" : "Pause";
+  $("toast").textContent =
+    state.toastTime > 0
+      ? state.toast
+      : state.staff.hired
+        ? "Nell has the public tables. You have a little more room to listen."
+        : "A warm room. Eight lives. You cannot be everywhere.";
+  if (state.paused && modal !== "welcome") {
+    rect(45, 45, 900, 571, "#15222330");
+    text(state.ended ? "WEEK COMPLETE" : "PAUSED", 500, 312, 32, "#ffebbc");
+  }
+  if (modal) {
+    for (let b of $("panel").querySelectorAll("button")) {
+      if (/choice\(|dispatch\(/.test(b.getAttribute("onclick") || "")) {
+        if (!("originalDisabled" in b.dataset))
+          b.dataset.originalDisabled = String(b.disabled);
+        b.disabled = state.paused || b.dataset.originalDisabled === "true";
+      }
+    }
+  }
+}
+function frame(t) {
+  let dt = Math.min(0.1, (t - last) / 1000 || 0);
+  last = t;
+  let wasEnded = state.ended;
+  Sim.tick(
+    state,
+    dt,
+    modal
+      ? {}
+      : {
+          up: keys.w || keys.arrowup,
+          down: keys.s || keys.arrowdown,
+          left: keys.a || keys.arrowleft,
+          right: keys.d || keys.arrowright,
+          interact: keys.e,
+        },
+  );
+  if (state.ended && !wasEnded) ending();
+  autosave += dt;
+  if (autosave > 8) {
+    save();
+    autosave = 0;
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+welcome();
+requestAnimationFrame(frame);

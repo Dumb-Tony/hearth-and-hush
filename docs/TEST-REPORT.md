@@ -2,7 +2,7 @@
 
 ## Automated checks
 
-24 scenario regressions pass under Node 24.19.0 using the same simulation bundled into the playable HTML. These include:
+26 scenario regressions pass under Node 24.19.0 using the same simulation bundled into the playable HTML. These include:
 
 - Complete routes from four room origins to every interaction station; keyboard collision sweeps and a continuous click-route input replay to every station.
 - Distant quiet speech stays unknown; close lingering learns a sourced warning; partitions block both perception and interaction, including with clearer cues enabled.
@@ -11,7 +11,7 @@
 - Held-key pouring, favorite service, specific memories, and repeat-drink money-exploit prevention.
 - Physical staff service, no automatic service in the private room, and limited staff coverage.
 - Physical expedition departure, two-day absence, prepared proof return, information-leak compromise, and underprepared injury.
-- Late or unaffordable dispatch rejection; persistent fallback letter; full seven-day ending; serialized state roundtrip.
+- Late or unaffordable dispatch rejection; persistent fallback letter; full seven-day ending; serialized state roundtrip and damaged-save recovery.
 - Sale, blackmail, ledger testimony, guard-search cooperation and refusal produce different state and memories.
 
 JavaScript syntax checks and the standalone HTML build pass. The deployed workflow repeats scenario tests before publishing.
@@ -45,6 +45,11 @@ This is agent-driven browser playtesting, **not a human manual-feel test**. The 
 
 Please play without reading the scenario code. Useful notes: whom you remembered, when you moved to overhear something, whether the quiet time felt comfortable or empty, whether you cared about the absent party, and whether an information choice surprised you. In particular, tune speech range, reading time, service frequency and expedition delay before expanding recipes or decoration.
 
+## Public deployment
+
+The public GitHub Pages URL was opened in the browser and the onboarding and playable scene loaded successfully. GitHub Actions completed both validation/build and deployment successfully.
+
 ## Remaining limits
 
 See README for explicit feature deferrals. Most importantly, authored schedules are a bounded prototype of independent lives; there is one expedition and one main information arc. Art is simple 2D. Long-term attachment, robust screen-reader play, fully supported touch interaction and the eventual 3D design are unproven.
+

@@ -1,192 +1,2133 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A physical fantasy tavern RPG. Pour a drink, overhear a confidence, and decide who learns what."><title>Hearth & Hush — provisional tavern RPG</title><style>*{box-sizing:border-box}body{margin:0;background:#10191b;color:#eee3cd;font-family:Georgia,serif}button,input,select{font:inherit}button{background:#344340;color:#f3e4c6;border:1px solid #788579;border-radius:5px;padding:9px 13px;cursor:pointer}button:hover,button:focus-visible{background:#596457;outline:2px solid #d6af67}button:disabled{opacity:.4;cursor:default}header{max-width:1260px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:17px 24px;gap:15px}h1{font-size:26px;font-weight:normal;letter-spacing:2px;margin:0}small,.eyebrow{font:11px system-ui;letter-spacing:2px;text-transform:uppercase;color:#b8b6a3}.status{font:14px system-ui;color:#d8c7a8;text-align:center}.tools{display:flex;gap:7px}.tools button{font:13px system-ui}main{max-width:1260px;margin:auto;padding:0 20px}#stage{position:relative;border:1px solid #546057;border-radius:9px;overflow:hidden;box-shadow:0 18px 65px #0008;background:#192427}canvas{display:block;width:100%;height:auto;touch-action:none}#caption{position:absolute;bottom:17px;left:20%;right:20%;padding:10px 16px;background:#16201fec;border:1px solid #a49165;border-radius:6px;text-align:center;font-size:17px;line-height:1.45;pointer-events:none;display:none}#toast{min-height:38px;padding:11px 0;color:#dfc997;text-align:center;font-size:16px}footer{display:flex;justify-content:space-between;gap:20px;font:13px system-ui;color:#b7c0b6;padding:5px 0 20px}kbd{color:#f3ddb3;border:1px solid #6a756b;border-radius:3px;padding:2px 5px}#overlay{position:fixed;inset:0;background:#061012c9;display:none;align-items:center;justify-content:center;padding:22px;z-index:3}#panel{background:#202c2b;border:1px solid #8b927b;border-radius:12px;max-width:670px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 30px 100px #000a;padding:28px}#panel h2{font-size:32px;font-weight:normal;margin:8px 0 14px;color:#efdbac}#panel h3{font-size:20px;font-weight:normal;color:#e5ca93}#panel p{line-height:1.6;color:#d0d6c9}#panel .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}#panel input[type=text]{width:100%;background:#122020;border:1px solid #67786c;color:#eee3cd;border-radius:4px;padding:10px;margin:7px 0}#panel label{display:block;line-height:1.7;margin:10px 0;color:#d1d7cc}#panel article{border-top:1px solid #566157;padding:10px 0}#panel .muted{font:13px system-ui;color:#a9b8ac;line-height:1.6}.tag{font:11px system-ui;letter-spacing:1px;color:#debd7e;text-transform:uppercase}.primary{background:#ad8746;color:#122120;border-color:#dcba76}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}#touch{display:none}.pauseFlag{color:#efd19a} @media(max-width:750px){header{padding:12px;flex-wrap:wrap}h1{font-size:20px}main{padding:0 5px}.tools{gap:3px}.tools button{padding:7px}#caption{left:6%;right:6%;font-size:13px;bottom:8px}footer{font-size:11px;flex-wrap:wrap}#panel{padding:20px}.grid{grid-template-columns:1fr}#touch{display:block;position:absolute;right:10px;bottom:10px}#toast{font-size:13px}}
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A physical fantasy tavern RPG. Pour a drink, overhear a confidence, and decide who learns what."><title>Hearth & Hush — provisional tavern RPG</title><style>* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #10191b;
+  color: #eee3cd;
+  font-family: Georgia, serif;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  background: #344340;
+  color: #f3e4c6;
+  border: 1px solid #788579;
+  border-radius: 5px;
+  padding: 9px 13px;
+  cursor: pointer;
+}
+button:hover,
+button:focus-visible {
+  background: #596457;
+  outline: 2px solid #d6af67;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+header {
+  max-width: 1260px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 24px;
+  gap: 15px;
+}
+h1 {
+  font-size: 26px;
+  font-weight: normal;
+  letter-spacing: 2px;
+  margin: 0;
+}
+small,
+.eyebrow {
+  font: 11px system-ui;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #b8b6a3;
+}
+.status {
+  font: 14px system-ui;
+  color: #d8c7a8;
+  text-align: center;
+}
+.tools {
+  display: flex;
+  gap: 7px;
+}
+.tools button {
+  font: 13px system-ui;
+}
+main {
+  max-width: 1260px;
+  margin: auto;
+  padding: 0 20px;
+}
+#stage {
+  position: relative;
+  border: 1px solid #546057;
+  border-radius: 9px;
+  overflow: hidden;
+  box-shadow: 0 18px 65px #0008;
+  background: #192427;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+#caption {
+  position: absolute;
+  bottom: 17px;
+  left: 20%;
+  right: 20%;
+  padding: 10px 16px;
+  background: #16201fec;
+  border: 1px solid #a49165;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.45;
+  pointer-events: none;
+  display: none;
+}
+#toast {
+  min-height: 38px;
+  padding: 11px 0;
+  color: #dfc997;
+  text-align: center;
+  font-size: 16px;
+}
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font: 13px system-ui;
+  color: #b7c0b6;
+  padding: 5px 0 20px;
+}
+kbd {
+  color: #f3ddb3;
+  border: 1px solid #6a756b;
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: #061012c9;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  z-index: 3;
+}
+#panel {
+  background: #202c2b;
+  border: 1px solid #8b927b;
+  border-radius: 12px;
+  max-width: 670px;
+  width: 100%;
+  max-height: 88vh;
+  overflow: auto;
+  box-shadow: 0 30px 100px #000a;
+  padding: 28px;
+}
+#panel h2 {
+  font-size: 32px;
+  font-weight: normal;
+  margin: 8px 0 14px;
+  color: #efdbac;
+}
+#panel h3 {
+  font-size: 20px;
+  font-weight: normal;
+  color: #e5ca93;
+}
+#panel p {
+  line-height: 1.6;
+  color: #d0d6c9;
+}
+#panel .actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+#panel input[type="text"] {
+  width: 100%;
+  background: #122020;
+  border: 1px solid #67786c;
+  color: #eee3cd;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 7px 0;
+}
+#panel label {
+  display: block;
+  line-height: 1.7;
+  margin: 10px 0;
+  color: #d1d7cc;
+}
+#panel article {
+  border-top: 1px solid #566157;
+  padding: 10px 0;
+}
+#panel .muted {
+  font: 13px system-ui;
+  color: #a9b8ac;
+  line-height: 1.6;
+}
+.tag {
+  font: 11px system-ui;
+  letter-spacing: 1px;
+  color: #debd7e;
+  text-transform: uppercase;
+}
+.primary {
+  background: #ad8746;
+  color: #122120;
+  border-color: #dcba76;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+#touch {
+  display: none;
+}
+.pauseFlag {
+  color: #efd19a;
+}
+@media (max-width: 750px) {
+  header {
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-size: 20px;
+  }
+  main {
+    padding: 0 5px;
+  }
+  .tools {
+    gap: 3px;
+  }
+  .tools button {
+    padding: 7px;
+  }
+  #caption {
+    left: 6%;
+    right: 6%;
+    font-size: 13px;
+    bottom: 8px;
+  }
+  footer {
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+  #panel {
+    padding: 20px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  #touch {
+    display: block;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+  }
+  #toast {
+    font-size: 13px;
+  }
+}
 /* Keep the whole physical tavern visible on laptop screens. */
-main{max-width:min(1260px,calc((100vh - 170px)*1.51515 + 40px))}#stage{min-width:0}#toast{font-size:14px}header{padding-top:12px;padding-bottom:12px}footer{font-size:11px} @media(max-height:620px){header{padding:5px 18px}header small{display:none}main{max-width:min(1260px,calc((100vh - 130px)*1.51515 + 40px))}#toast{padding:5px 0;min-height:28px}}
+main {
+  max-width: min(1260px, calc((100vh - 170px) * 1.51515 + 40px));
+}
+#stage {
+  min-width: 0;
+}
+#toast {
+  font-size: 14px;
+}
+header {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+footer {
+  font-size: 11px;
+}
+@media (max-height: 620px) {
+  header {
+    padding: 5px 18px;
+  }
+  header small {
+    display: none;
+  }
+  main {
+    max-width: min(1260px, calc((100vh - 130px) * 1.51515 + 40px));
+  }
+  #toast {
+    padding: 5px 0;
+    min-height: 28px;
+  }
+}
 </style></head><body><header><div><small>Rookcross • a working inn</small><h1>HEARTH & HUSH</h1></div><div id="status" class="status"></div><div class="tools"><button id="pause" onclick="pause()">Pause</button><button onclick="journal()">Journal · J</button><button id="sound" onclick="toggleAmbience()">Sound off</button><button onclick="settings()">Settings</button></div></header><main><div id="stage"><canvas id="game" width="1000" height="660" aria-label="Living tavern. Use WASD or arrow keys to move and E to interact."></canvas><div id="caption" aria-live="polite"></div><button id="touch" onclick="interact()">Interact</button></div><div id="toast" role="status"></div><footer><span><kbd>WASD</kbd> move · <kbd>E</kbd> interact / hold to pour · <kbd>Space</kbd> pause · <kbd>J</kbd> journal</span><span>Provisional codename · standalone vertical slice</span></footer></main><div id="overlay"><section id="panel" role="dialog" aria-label="Innkeeper interaction"></section></div><script>/* Stable content IDs are the migration boundary for a later C# simulation. */
 const DATA = {
   npcs: [
-    {id:'cedric',name:'Cedric',role:'Aspiring swordsman',color:'#be764b',hair:'#d7b76c',favorite:'ale',x:380,y:350,arrival:8,depart:155,ambition:'My sister is apprenticing to a glassmaker. Someone has to pay the fee.',intro:'I have a sword. Bram says that is different from being a swordsman.',faction:'Road company'},
-    {id:'mira',name:'Mira',role:'Scout • claims to know every road',color:'#7a8c79',hair:'#27262b',favorite:'wine',x:775,y:240,arrival:18,depart:162,ambition:'One day I will owe nobody anything. Not even a favor.',intro:'A secret is like a spare key. You should know who has a copy.',faction:'Reed Knives'},
-    {id:'nell',name:'Nell',role:'Server looking for a steady wage',color:'#759fa6',hair:'#b96543',favorite:'tea',x:265,y:265,arrival:0,depart:172,ambition:'A boat. Nothing grand. Just something that belongs to me.',intro:'Your aunt used to say: watch the hands, not the smile. Mine mostly carry plates.',faction:'Rookcross locals'},
-    {id:'oren',name:'Oren',role:'Merchant • wagon owner',color:'#ad8b4e',hair:'#e2d1b1',favorite:'wine',x:680,y:455,arrival:28,depart:145,ambition:'The road must turn a profit. Good intentions do not shoe horses.',intro:'Three missing wagons. Bandits, obviously. Best let the merchants handle it.',faction:'Merchant compact'},
-    {id:'tomas',name:'Tomas',role:'Watch constable',color:'#658aa7',hair:'#635443',favorite:'stew',x:590,y:350,arrival:34,depart:168,ambition:'A wage on time. And one report that does not say probably.',intro:'If somebody says obviously, ask them how they know.',faction:'Crown watch'},
-    {id:'aldous',name:'Aldous',role:'Hearth cleric',color:'#aa9e79',hair:'#aaa795',favorite:'tea',x:430,y:510,arrival:45,depart:159,ambition:'The chapel is full of people the road has forgotten.',intro:'A hot meal is a perfectly respectable prayer.',faction:'Hearth church'},
-    {id:'bram',name:'Bram',role:'Veteran dwarf • reluctant mentor',color:'#8b6e64',hair:'#b8b1a1',favorite:'ale',x:350,y:510,arrival:12,depart:160,ambition:'Teach the boy to come home. Glory can look after itself.',intro:'Rope, food, a second pair of eyes. The heroic essentials.',faction:'Road company'},
-    {id:'ivo',name:'Ivo',role:'Wizard • room two',color:'#8d7ea7',hair:'#ddd4bd',favorite:'stew',x:890,y:110,arrival:55,depart:174,ambition:'This inn appears in three treaties. None mention why.',intro:'My familiar is not a second guest. It is a professional expense.',faction:'Mages register'}
+    {
+      id: "cedric",
+      name: "Cedric",
+      role: "Aspiring swordsman",
+      color: "#be764b",
+      hair: "#d7b76c",
+      favorite: "ale",
+      x: 380,
+      y: 350,
+      arrival: 8,
+      depart: 155,
+      ambition:
+        "My sister is apprenticing to a glassmaker. Someone has to pay the fee.",
+      intro:
+        "I have a sword. Bram says that is different from being a swordsman.",
+      faction: "Road company",
+    },
+    {
+      id: "mira",
+      name: "Mira",
+      role: "Scout • claims to know every road",
+      color: "#7a8c79",
+      hair: "#27262b",
+      favorite: "wine",
+      x: 775,
+      y: 240,
+      arrival: 18,
+      depart: 162,
+      ambition: "One day I will owe nobody anything. Not even a favor.",
+      intro: "A secret is like a spare key. You should know who has a copy.",
+      faction: "Reed Knives",
+    },
+    {
+      id: "nell",
+      name: "Nell",
+      role: "Server looking for a steady wage",
+      color: "#759fa6",
+      hair: "#b96543",
+      favorite: "tea",
+      x: 265,
+      y: 265,
+      arrival: 0,
+      depart: 172,
+      ambition: "A boat. Nothing grand. Just something that belongs to me.",
+      intro:
+        "Your aunt used to say: watch the hands, not the smile. Mine mostly carry plates.",
+      faction: "Rookcross locals",
+    },
+    {
+      id: "oren",
+      name: "Oren",
+      role: "Merchant • wagon owner",
+      color: "#ad8b4e",
+      hair: "#e2d1b1",
+      favorite: "wine",
+      x: 680,
+      y: 455,
+      arrival: 28,
+      depart: 145,
+      ambition:
+        "The road must turn a profit. Good intentions do not shoe horses.",
+      intro:
+        "Three missing wagons. Bandits, obviously. Best let the merchants handle it.",
+      faction: "Merchant compact",
+    },
+    {
+      id: "tomas",
+      name: "Tomas",
+      role: "Watch constable",
+      color: "#658aa7",
+      hair: "#635443",
+      favorite: "stew",
+      x: 590,
+      y: 350,
+      arrival: 34,
+      depart: 168,
+      ambition: "A wage on time. And one report that does not say probably.",
+      intro: "If somebody says obviously, ask them how they know.",
+      faction: "Crown watch",
+    },
+    {
+      id: "aldous",
+      name: "Aldous",
+      role: "Hearth cleric",
+      color: "#aa9e79",
+      hair: "#aaa795",
+      favorite: "tea",
+      x: 430,
+      y: 510,
+      arrival: 45,
+      depart: 159,
+      ambition: "The chapel is full of people the road has forgotten.",
+      intro: "A hot meal is a perfectly respectable prayer.",
+      faction: "Hearth church",
+    },
+    {
+      id: "bram",
+      name: "Bram",
+      role: "Veteran dwarf • reluctant mentor",
+      color: "#8b6e64",
+      hair: "#b8b1a1",
+      favorite: "ale",
+      x: 350,
+      y: 510,
+      arrival: 12,
+      depart: 160,
+      ambition: "Teach the boy to come home. Glory can look after itself.",
+      intro: "Rope, food, a second pair of eyes. The heroic essentials.",
+      faction: "Road company",
+    },
+    {
+      id: "ivo",
+      name: "Ivo",
+      role: "Wizard • room two",
+      color: "#8d7ea7",
+      hair: "#ddd4bd",
+      favorite: "stew",
+      x: 890,
+      y: 110,
+      arrival: 55,
+      depart: 174,
+      ambition: "This inn appears in three treaties. None mention why.",
+      intro: "My familiar is not a second guest. It is a professional expense.",
+      faction: "Mages register",
+    },
   ],
-  rumors:{
-    wagons:{title:'The missing Westbridge wagons',text:'Three wagons are missing on the Blackwood road. Their fate is uncertain.',kind:'Unverified claim'},
-    diversion:{title:'A voluntary detour?',text:'The wagons may have turned toward the old tollhouse willingly.',kind:'Lead'},
-    ledger:{title:'Payments at the tollhouse',text:'A stamped ledger records Oren paying to divert trade past Rookcross.',kind:'Confirmed evidence'},
-    warning:{title:'The broken north bridge',text:'The north bridge is rotten. A survey should take the ridge with rope.',kind:'Practical warning'},
-    carving:{title:'Names beneath the hearth',text:'The inn carving matches a treaty seal. Old keepers recorded meetings here.',kind:'Unresolved connection'},
-    knives:{title:'Mira and the Reed Knives',text:'Mira passes useful road news to the Reed Knives. Her independence is a claim.',kind:'Sensitive testimony'}
+  rumors: {
+    wagons: {
+      title: "The missing Westbridge wagons",
+      text: "Three wagons are missing on the Blackwood road. Their fate is uncertain.",
+      kind: "Unverified claim",
+    },
+    diversion: {
+      title: "A voluntary detour?",
+      text: "The wagons may have turned toward the old tollhouse willingly.",
+      kind: "Lead",
+    },
+    ledger: {
+      title: "Payments at the tollhouse",
+      text: "A stamped ledger records Oren paying to divert trade past Rookcross.",
+      kind: "Confirmed evidence",
+    },
+    warning: {
+      title: "The broken north bridge",
+      text: "The north bridge is rotten. A survey should take the ridge with rope.",
+      kind: "Practical warning",
+    },
+    carving: {
+      title: "Names beneath the hearth",
+      text: "The inn carving matches a treaty seal. Old keepers recorded meetings here.",
+      kind: "Unresolved connection",
+    },
+    knives: {
+      title: "Mira and the Reed Knives",
+      text: "Mira passes useful road news to the Reed Knives. Her independence is a claim.",
+      kind: "Sensitive testimony",
+    },
   },
   // Overlapping windows are deliberate. Ordinary lines are allowed to disappear.
-  talks:[
-    {id:'wagons',days:[1,2],start:42,end:92,a:'oren',b:'tomas',fragment:'…three wagons…',line:'Oren: Three Westbridge wagons. Gone. Bandits, obviously. Tomas: Funny. No broken wheels, no bodies.',rumor:'wagons'},
-    {id:'mentor',days:[1,2,3],start:22,end:65,a:'bram',b:'cedric',fragment:'…not the north bridge…',line:'Bram: The north bridge is rotten. Take rope and use the ridge. Cedric: I thought you would say bring a bigger sword.',rumor:'warning'},
-    {id:'booth',days:[1,2,3],start:99,end:137,a:'mira',b:'oren',whisper:true,fragment:'…paid to turn…',line:'Mira: They were paid to turn at the tollhouse. Oren: Lower your voice. You were paid to forget.',rumor:'diversion'},
-    {id:'confidence',days:[2,3,5],start:66,end:96,a:'mira',b:'nell',whisper:true,fragment:'…the Knives expect…',line:'Mira: The Reed Knives expect road news. Nell: And Cedric thinks you only scout for him.',rumor:'knives'},
-    {id:'quiet',days:[4],start:36,end:98,a:'cedric',b:'nell',fragment:'…blue glass…',line:'Cedric: My sister made you a bead. It is not quite round. Nell: Neither is the moon, up close. Tell her I love it.'},
-    {id:'soup',days:[1,3,4,6],start:111,end:152,a:'aldous',b:'bram',fragment:'…a respectable prayer…',line:'Aldous: I prayed for dinner. Bram: I ordered soup. Aldous: Different traditions. Same excellent result.'},
-    {id:'seal',days:[3,5,6],start:64,end:115,a:'ivo',b:'aldous',fragment:'…same carved mark…',line:'Ivo: That hearth mark is on the Treaty of Ash. Aldous: Your aunt kept names, not recipes, in that ledger.',rumor:'carving'},
-    {id:'beard',days:[4,7],start:110,end:152,a:'bram',b:'tomas',fragment:'…under the beard…',line:'Tomas: Regulations say no concealed weapons. Bram: If I remove everything under my beard, we will be here until spring.'}
+  talks: [
+    {
+      id: "wagons",
+      days: [1, 2],
+      start: 42,
+      end: 92,
+      a: "oren",
+      b: "tomas",
+      fragment: "…three wagons…",
+      line: "Oren: Three Westbridge wagons. Gone. Bandits, obviously. Tomas: Funny. No broken wheels, no bodies.",
+      rumor: "wagons",
+    },
+    {
+      id: "mentor",
+      days: [1, 2, 3],
+      start: 22,
+      end: 65,
+      a: "bram",
+      b: "cedric",
+      fragment: "…not the north bridge…",
+      line: "Bram: The north bridge is rotten. Take rope and use the ridge. Cedric: I thought you would say bring a bigger sword.",
+      rumor: "warning",
+    },
+    {
+      id: "booth",
+      days: [1, 2, 3],
+      start: 99,
+      end: 137,
+      a: "mira",
+      b: "oren",
+      whisper: true,
+      fragment: "…paid to turn…",
+      line: "Mira: They were paid to turn at the tollhouse. Oren: Lower your voice. You were paid to forget.",
+      rumor: "diversion",
+    },
+    {
+      id: "confidence",
+      days: [2, 3, 5],
+      start: 66,
+      end: 96,
+      a: "mira",
+      b: "nell",
+      whisper: true,
+      fragment: "…the Knives expect…",
+      line: "Mira: The Reed Knives expect road news. Nell: And Cedric thinks you only scout for him.",
+      rumor: "knives",
+    },
+    {
+      id: "quiet",
+      days: [4],
+      start: 36,
+      end: 98,
+      a: "cedric",
+      b: "nell",
+      fragment: "…blue glass…",
+      line: "Cedric: My sister made you a bead. It is not quite round. Nell: Neither is the moon, up close. Tell her I love it.",
+    },
+    {
+      id: "soup",
+      days: [1, 3, 4, 6],
+      start: 111,
+      end: 152,
+      a: "aldous",
+      b: "bram",
+      fragment: "…a respectable prayer…",
+      line: "Aldous: I prayed for dinner. Bram: I ordered soup. Aldous: Different traditions. Same excellent result.",
+    },
+    {
+      id: "seal",
+      days: [3, 5, 6],
+      start: 64,
+      end: 115,
+      a: "ivo",
+      b: "aldous",
+      fragment: "…same carved mark…",
+      line: "Ivo: That hearth mark is on the Treaty of Ash. Aldous: Your aunt kept names, not recipes, in that ledger.",
+      rumor: "carving",
+    },
+    {
+      id: "beard",
+      days: [4, 7],
+      start: 110,
+      end: 152,
+      a: "bram",
+      b: "tomas",
+      fragment: "…under the beard…",
+      line: "Tomas: Regulations say no concealed weapons. Bram: If I remove everything under my beard, we will be here until spring.",
+    },
   ],
-  walls:[{x:710,y:35,w:18,h:155},{x:710,y:300,w:18,h:38},{x:710,y:338,w:235,h:18},{x:710,y:35,w:235,h:14},{x:728,y:179,w:65,h:12},{x:870,y:179,w:75,h:12},
-    {x:35,y:185,w:175,h:18},{x:295,y:185,w:100,h:18}],
-  furniture:[{x:95,y:230,w:75,h:160,type:'bar'},{x:330,y:375,w:100,h:50,type:'table'}, {x:530,y:375,w:100,h:50,type:'table'}, {x:335,y:540,w:125,h:40,type:'table'}, {x:640,y:490,w:105,h:45,type:'table'}, {x:790,y:260,w:95,h:40,type:'table'}, {x:805,y:65,w:115,h:55,type:'bed'}, {x:240,y:65,w:120,h:65,type:'desk'}],
-  stations:[{id:'ale',name:'Ale cask',x:77,y:255},{id:'wine',name:'Wine cask',x:77,y:305},{id:'tea',name:'Tea kettle',x:77,y:355},{id:'stew',name:'Stew pot',x:120,y:440},{id:'board',name:'Letters & expedition board',x:280,y:153},{id:'hearth',name:'Carved hearth',x:510,y:82},{id:'room',name:'Guest room',x:875,y:160},{id:'bed',name:'Close the inn',x:105,y:110}],
-  daily:{
-    cedric:['Bram checked my boots before my sword. I think that was an insult.','My sister writes as if glassmaking is wizardry. Perhaps it is.','If I go, keep my chair? Just until I come back.','Nell kept the blue bead. She put it where the light catches it.','You can practice being brave. I am less certain about being sensible.','There is a difference between a story and the part you were actually there for.','When my sister asks what I did, I want to have something worth telling.'],
-    mira:['You can tell a lot about someone by which door they use.','Cedric thinks I never get scared. It would be unkind to correct him.','I do not like owing favors. That does not mean I have stopped.','A quiet room. Imagine being paid for that.','I have done things for people I would not invite to dinner.','He asked who knew. I should have had a better answer.','Next week I might try earning money honestly. Do not write that down.'],
-    nell:['The table nearest the fire rocks. Your aunt put a love letter under the short leg.','Cedric stares at the door every time it opens. He says he is checking the weather.','Oren paid with exact change. A man who counts everything is hiding a total.','The bead is not round. I like it better that way.','Boats are expensive. Apparently the water is included.','Sometimes all you can do is put the right cup in front of someone.','The room feels a little less empty than it did on Monday.'],
-    oren:['You will need reliable suppliers. I am quite reliable when paid.','Rookcross used to have six carriers. Now we have three and a very optimistic sign.','I prefer wine in a quiet corner. Business carries enough noise.','A day without an invoice is a day wasted. You disagree? How restful.','People call it greed when they dislike the price.','I have kept this town fed through worse winters than you remember.','I hope we understand each other better now.'],
-    tomas:['I have arrested the same goat twice. I am beginning to suspect contempt.','The wheel tracks turned willingly toward the tollhouse. That is a lead, not proof.','They want a culprit by Friday. I would settle for a fact.','Bram says his beard is private property. This complicates searches.','My deputy has patched the same boot three times. The Crown remembers us at tax time.','There has been a complaint about that tollhouse. I need to know what you can actually support.','A useful witness knows the difference between heard and saw.'],
-    aldous:['A hot meal is a perfectly respectable prayer.','Three displaced families in the chapel. I have stopped counting spare blankets.','Ivo thinks the carving is a seal. Your aunt said it was a reminder.','Nobody needs rescuing tonight. Sit down before that changes.','There is room at the chapel. There is always room, somehow.','Send the injured to me before you send them for another drink.','You cannot mend a road with kindness. But you can make it worth returning to.'],
-    bram:['Rope, food, a second pair of eyes. The heroic essentials.','The north bridge is rotten. Rope and the ridge. Tell the boy.','He asked how to look fearless. I told him to look behind him occasionally.','Soup. A chair. No one trying to bite me. I have had worse adventures.','An empty chair is louder than a full room, some days.','Coming home is a skill. I wish somebody had told me that sooner.','The boy listens more now. That may save him.'],
-    ivo:['My familiar is a professional expense. Not a second guest.','It is only purple because it touched the wine. Do not let it touch the soup.','The Treaty of Ash has this inn carved into its seal. Peculiar.','No experiments today. The familiar has demanded a holiday.','Your aunt wrote names beside dates. Not debts. Meetings.','The stones beneath the hearth are older than the building. I said older, not haunted.','Three treaties. One inn. We should have another look next week.']
+  walls: [
+    { x: 710, y: 35, w: 18, h: 155 },
+    { x: 710, y: 300, w: 18, h: 38 },
+    { x: 710, y: 338, w: 235, h: 18 },
+    { x: 710, y: 35, w: 235, h: 14 },
+    { x: 728, y: 179, w: 65, h: 12 },
+    { x: 870, y: 179, w: 75, h: 12 },
+    { x: 35, y: 185, w: 175, h: 18 },
+    { x: 295, y: 185, w: 100, h: 18 },
+  ],
+  furniture: [
+    { x: 95, y: 230, w: 75, h: 160, type: "bar" },
+    { x: 330, y: 375, w: 100, h: 50, type: "table" },
+    { x: 530, y: 375, w: 100, h: 50, type: "table" },
+    { x: 335, y: 540, w: 125, h: 40, type: "table" },
+    { x: 640, y: 490, w: 105, h: 45, type: "table" },
+    { x: 790, y: 260, w: 95, h: 40, type: "table" },
+    { x: 805, y: 65, w: 115, h: 55, type: "bed" },
+    { x: 240, y: 65, w: 120, h: 65, type: "desk" },
+  ],
+  stations: [
+    { id: "ale", name: "Ale cask", x: 77, y: 255 },
+    { id: "wine", name: "Wine cask", x: 77, y: 305 },
+    { id: "tea", name: "Tea kettle", x: 77, y: 355 },
+    { id: "stew", name: "Stew pot", x: 120, y: 440 },
+    { id: "board", name: "Letters & expedition board", x: 280, y: 153 },
+    { id: "hearth", name: "Carved hearth", x: 510, y: 82 },
+    { id: "room", name: "Guest room", x: 875, y: 160 },
+    { id: "bed", name: "Close the inn", x: 105, y: 110 },
+  ],
+  daily: {
+    cedric: [
+      "Bram checked my boots before my sword. I think that was an insult.",
+      "My sister writes as if glassmaking is wizardry. Perhaps it is.",
+      "If I go, keep my chair? Just until I come back.",
+      "Nell kept the blue bead. She put it where the light catches it.",
+      "You can practice being brave. I am less certain about being sensible.",
+      "There is a difference between a story and the part you were actually there for.",
+      "When my sister asks what I did, I want to have something worth telling.",
+    ],
+    mira: [
+      "You can tell a lot about someone by which door they use.",
+      "Cedric thinks I never get scared. It would be unkind to correct him.",
+      "I do not like owing favors. That does not mean I have stopped.",
+      "A quiet room. Imagine being paid for that.",
+      "I have done things for people I would not invite to dinner.",
+      "He asked who knew. I should have had a better answer.",
+      "Next week I might try earning money honestly. Do not write that down.",
+    ],
+    nell: [
+      "The table nearest the fire rocks. Your aunt put a love letter under the short leg.",
+      "Cedric stares at the door every time it opens. He says he is checking the weather.",
+      "Oren paid with exact change. A man who counts everything is hiding a total.",
+      "The bead is not round. I like it better that way.",
+      "Boats are expensive. Apparently the water is included.",
+      "Sometimes all you can do is put the right cup in front of someone.",
+      "The room feels a little less empty than it did on Monday.",
+    ],
+    oren: [
+      "You will need reliable suppliers. I am quite reliable when paid.",
+      "Rookcross used to have six carriers. Now we have three and a very optimistic sign.",
+      "I prefer wine in a quiet corner. Business carries enough noise.",
+      "A day without an invoice is a day wasted. You disagree? How restful.",
+      "People call it greed when they dislike the price.",
+      "I have kept this town fed through worse winters than you remember.",
+      "I hope we understand each other better now.",
+    ],
+    tomas: [
+      "I have arrested the same goat twice. I am beginning to suspect contempt.",
+      "The wheel tracks turned willingly toward the tollhouse. That is a lead, not proof.",
+      "They want a culprit by Friday. I would settle for a fact.",
+      "Bram says his beard is private property. This complicates searches.",
+      "My deputy has patched the same boot three times. The Crown remembers us at tax time.",
+      "There has been a complaint about that tollhouse. I need to know what you can actually support.",
+      "A useful witness knows the difference between heard and saw.",
+    ],
+    aldous: [
+      "A hot meal is a perfectly respectable prayer.",
+      "Three displaced families in the chapel. I have stopped counting spare blankets.",
+      "Ivo thinks the carving is a seal. Your aunt said it was a reminder.",
+      "Nobody needs rescuing tonight. Sit down before that changes.",
+      "There is room at the chapel. There is always room, somehow.",
+      "Send the injured to me before you send them for another drink.",
+      "You cannot mend a road with kindness. But you can make it worth returning to.",
+    ],
+    bram: [
+      "Rope, food, a second pair of eyes. The heroic essentials.",
+      "The north bridge is rotten. Rope and the ridge. Tell the boy.",
+      "He asked how to look fearless. I told him to look behind him occasionally.",
+      "Soup. A chair. No one trying to bite me. I have had worse adventures.",
+      "An empty chair is louder than a full room, some days.",
+      "Coming home is a skill. I wish somebody had told me that sooner.",
+      "The boy listens more now. That may save him.",
+    ],
+    ivo: [
+      "My familiar is a professional expense. Not a second guest.",
+      "It is only purple because it touched the wine. Do not let it touch the soup.",
+      "The Treaty of Ash has this inn carved into its seal. Peculiar.",
+      "No experiments today. The familiar has demanded a holiday.",
+      "Your aunt wrote names beside dates. Not debts. Meetings.",
+      "The stones beneath the hearth are older than the building. I said older, not haunted.",
+      "Three treaties. One inn. We should have another look next week.",
+    ],
   },
-  dayNames:['First light','Familiar faces','A letter in the rain','Nothing much, thankfully','The empty chair','What comes home','The keeper of things']
+  dayNames: [
+    "First light",
+    "Familiar faces",
+    "A letter in the rain",
+    "Nothing much, thankfully",
+    "The empty chair",
+    "What comes home",
+    "The keeper of things",
+  ],
 };
-if(typeof module!=='undefined') module.exports=DATA;
+if (typeof module !== "undefined") module.exports = DATA;
 
-const Sim = (()=>{
- const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
- const obstacles=[...DATA.walls,...DATA.furniture];
- function blocked(x,y,r=11){return x<47+r||x>941-r||y<47+r||y>615-r||obstacles.some(o=>x>o.x-r&&x<o.x+o.w+r&&y>o.y-r&&y<o.y+o.h+r)}
- function line(a,b){let d=dist(a,b);for(let i=0;i<=d;i+=6){let t=i/(d||1),x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;if(DATA.walls.some(o=>x>o.x&&x<o.x+o.w&&y>o.y&&y<o.y+o.h))return false}return true}
- function route(a,b){const step=20,key=(x,y)=>x+','+y;
-  const nearest=p=>{let points=[];for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++){let x=Math.round(p.x/step)+dx,y=Math.round(p.y/step)+dy;if(!blocked(x*step,y*step))points.push({x,y})}return points.sort((u,v)=>Math.hypot(u.x*step-p.x,u.y*step-p.y)-Math.hypot(v.x*step-p.x,v.y*step-p.y))[0]};
-  let goal=nearest(b),start=nearest(a);if(!goal||!start)return [];let q=[start],seen=new Map([[key(start.x,start.y),null]]),last=null;
-  for(let h=0;h<q.length;h++){let n=q[h];if(n.x===goal.x&&n.y===goal.y){last=n;break}for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){let x=n.x+dx,y=n.y+dy,k=key(x,y);if(!seen.has(k)&&!blocked(x*step,y*step)){seen.set(k,n);q.push({x,y})}}}
-  if(!last)return [];let out=[];while(last){out.unshift({x:last.x*step,y:last.y*step});last=seen.get(key(last.x,last.y))}return out;
- }
- function fresh(){return {version:1,day:1,time:0,coins:24,debt:0,player:{x:250,y:320,name:'Keeper',color:'#d6ab5f',carry:null,path:[]},npcs:DATA.npcs.map((n,i)=>({...n,x:480+i*4,y:597,present:false,path:[],memory:[],known:[],familiar:0,served:0,away:false,state:'arriving'})),knowledge:{},heard:{},events:{},relationships:{'cedric:mira':'trusting','cedric:bram':'apprentice and mentor','cedric:nell':'tentative fondness'},world:{trade:'Wagons avoid Rookcross',leak:false,sold:false,exploited:false,guard:'No complaint filed'},staff:{hired:false,reports:[]},quest:null,notes:[],evidence:[],paused:false,ended:false,settings:{clear:false,slow:false},pour:0,toast:'',toastTime:0}}
- function note(s,t){s.notes.unshift({day:s.day,text:t});s.notes=s.notes.slice(0,50)}
- function say(s,t){s.toast=t;s.toastTime=7}
- function learn(s,id,source,channel='heard',confirmed=false){let k=s.knowledge[id];if(!k)k=s.knowledge[id]={id,observations:[],knownBy:['keeper'],status:DATA.rumors[id].kind};if(!k.observations.some(o=>o.source===source)){k.observations.push({source,origin:source.includes('recalling ')?source.split('recalling ')[1]:source,channel,day:s.day});if(new Set(k.observations.map(o=>o.origin||o.source)).size>1)k.status='Corroborated';}if(confirmed)k.status='Confirmed evidence';return k}
- function npc(s,id){return s.npcs.find(n=>n.id===id)}
- function activeTalks(s){return DATA.talks.filter(t=>t.days.includes(s.day)&&s.time>=t.start&&s.time<t.end&&npc(s,t.a).present&&npc(s,t.b).present&&!npc(s,t.a).away&&!npc(s,t.b).away).filter(t=>dist(npc(s,t.a),npc(s,t.b))<145)}
- function perceive(s,t,observer=s.player){let a=npc(s,t.a),d=dist(observer,a),visible=line(observer,a);let familiar=observer===s.player?a.familiar:0;let near=(t.whisper?75:118)+(s.settings.clear?30:0)+Math.min(15,familiar*3);if(!visible)return {tier:0};if(d<near)return {tier:3};if(d<near+70)return {tier:2};if(d<340)return {tier:1};return {tier:0}}
- function move(n,dt,speed=65){if(!n.path?.length)return;let p=n.path[0],d=dist(n,p),v=speed*dt;if(d<=v){n.x=p.x;n.y=p.y;n.path.shift()}else{n.x+=(p.x-n.x)/d*v;n.y+=(p.y-n.y)/d*v}}
- function target(n,p){if(!n.goal||dist(n.goal,p)>12){n.goal={...p};n.path=route(n,p)}}
- function resetDay(s){for(let n of s.npcs){n.present=false;n.served=0;n.path=[];n.goal=null;n.x=480;n.y=597} s.heard={};s.events['room'+s.day]=false}
- function nextDay(s){if(s.paused)return false;if(s.day===7){s.ended=true;s.paused=true;return true}s.coins-=s.staff.hired?7:4;if(s.coins<0){s.debt+=-s.coins;s.coins=0;note(s,'Oren covered the shortfall. He called it a favor, not a loan.')}s.day++;s.time=0;resetDay(s);note(s,'Morning: '+DATA.dayNames[s.day-1]+'.');return true}
- function resolve(s){let q=s.quest;if(!q||q.resolved||s.day<q.returnDay)return;q.resolved=true;const safe=q.bram&&q.supplies&&q.warning&&q.cautious;q.outcome=safe?(s.world.leak?'compromised':'proof'):'injured';for(let id of q.party){let n=npc(s,id);n.away=false;n.present=false;n.goal=null;n.memory.push(q.outcome==='injured'?'You sent us onto a broken road without enough preparation.':'You made sure we had a way home.')}s.relationships['cedric:bram']=q.bram?'Bram brought Cedric home':'Cedric wishes Bram had come';if(q.outcome==='injured')s.relationships['cedric:mira']=s.world.leak?'Cedric feels betrayed':'Mira worries for Cedric';}
- function tick(s,dt,input={}){if(s.paused||s.ended)return;dt=Math.min(dt,.1);s.time+=dt/(s.settings.slow?1.7:1);s.toastTime=Math.max(0,s.toastTime-dt);let dx=(input.right?1:0)-(input.left?1:0),dy=(input.down?1:0)-(input.up?1:0);if(dx||dy){s.player.path=[];let l=Math.hypot(dx,dy),v=155*dt;if(!blocked(s.player.x+dx/l*v,s.player.y))s.player.x+=dx/l*v;if(!blocked(s.player.x,s.player.y+dy/l*v))s.player.y+=dy/l*v}else move(s.player,dt,155);
-  resolve(s);
-  for(let n of s.npcs){if(n.away){if(n.present){target(n,{x:480,y:599});move(n,dt,78);if(dist(n,{x:480,y:599})<20)n.present=false}continue}if(s.time>=n.arrival&&s.time<n.depart&&!n.present&&!s.events['left'+s.day+n.id]){n.present=true;n.x=n.id==='mira'?915:480;n.y=n.id==='mira'?220:597;n.goal=null}
-   if(!n.present)continue;if(s.time>=n.depart){target(n,{x:480,y:599});if(dist(n,{x:480,y:599})<20){n.present=false;s.events['left'+s.day+n.id]=true;continue}}
-   else {let base=DATA.npcs.find(v=>v.id===n.id),p={x:base.x,y:base.y};let talk=DATA.talks.find(t=>t.days.includes(s.day)&&s.time>=t.start-8&&s.time<t.end&&(t.a===n.id||t.b===n.id));if(talk){let host=DATA.npcs.find(v=>v.id===talk.a);p={x:Math.min(910,host.x+(talk.b===n.id?65:0)),y:host.y}}
-    if(n.id==='mira'&&s.world.leak&&s.day>=3)p={x:775,y:230};
-    if(n.id==='nell'&&s.staff.hired){let guest=s.npcs.find(g=>g.present&&!g.away&&!g.served&&g.id!=='nell'&&g.x<710&&s.time>30);if(guest){p={x:guest.x-28,y:guest.y};if(dist(n,guest)<45){guest.served=1;s.coins+=3;n.state='serving'}}else p={x:245,y:265}}
-    target(n,p)}move(n,dt);n.state=n.path.length?'walking':n.served?'drinking':'seated';
+const Sim = (() => {
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+    clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const obstacles = [...DATA.walls, ...DATA.furniture];
+  function blocked(x, y, r = 11) {
+    return (
+      x < 47 + r ||
+      x > 941 - r ||
+      y < 47 + r ||
+      y > 615 - r ||
+      obstacles.some(
+        (o) =>
+          x > o.x - r && x < o.x + o.w + r && y > o.y - r && y < o.y + o.h + r,
+      )
+    );
   }
-  for(let t of activeTalks(s)){let p=perceive(s,t),h=s.heard[t.id]||(s.heard[t.id]={dwell:0,learned:false});if(p.tier===3){h.dwell+=dt;if(h.dwell>=3&&!h.learned){h.learned=true;if(t.rumor)learn(s,t.rumor,npc(s,t.a).name,'overheard')}}else h.dwell=Math.max(0,h.dwell-dt*.5);
-   let nell=npc(s,'nell');if(s.staff.hired&&t.rumor&&nell.present&&dist(nell,npc(s,t.a))<160&&line(nell,npc(s,t.a))&&!s.staff.reports.some(r=>r.id===t.rumor))s.staff.reports.push({id:t.rumor,source:npc(s,t.a).name})
+  function line(a, b) {
+    let d = dist(a, b);
+    for (let i = 0; i <= d; i += 6) {
+      let t = i / (d || 1),
+        x = a.x + (b.x - a.x) * t,
+        y = a.y + (b.y - a.y) * t;
+      if (
+        DATA.walls.some(
+          (o) => x > o.x && x < o.x + o.w && y > o.y && y < o.y + o.h,
+        )
+      )
+        return false;
+    }
+    return true;
   }
-  if(s.day===3&&s.time>15&&!s.events.letter){s.events.letter=true;s.evidence.push({id:'letter',x:280,y:153,text:'Westbridge asks after three missing wagons. The last driver mentioned a tollhouse detour.'})}
-  if(s.day===2&&s.time>110&&!s.events.spill){s.events.spill=true;s.evidence.push({id:'spill',x:620,y:240,text:'A purple puddle. Tiny paw prints. The familiar has declined responsibility.'})}
-  if(s.day===6&&s.time>70&&!s.events.search){s.events.search=true;s.world.guard=s.world.leak?'The watch is asking about a stripped tollhouse':'The watch needs testimony about the road'}
-  if(input.interact){let st=nearStation(s);if(st&&['ale','wine','tea','stew'].includes(st.id)){s.pour+=dt;if(s.pour>.65){act(s,'take',st.id);s.pour=0}}}else s.pour=0;
-  if(s.time>=180)nextDay(s);
- }
- function nearStation(s){return DATA.stations.filter(n=>dist(s.player,n)<65&&line(s.player,n)).sort((a,b)=>dist(s.player,a)-dist(s.player,b))[0]}
- function nearNpc(s){return s.npcs.filter(n=>n.present&&!n.away&&dist(s.player,n)<65&&line(s.player,n)).sort((a,b)=>dist(s.player,a)-dist(s.player,b))[0]}
- function act(s,verb,id,opts={}){if(s.paused||s.ended)return false;let n=npc(s,id),st=nearStation(s);if(['share','sell','withhold','exploit','serve','talk','hire','report','debrief','testify','cooperate'].includes(verb)&&(!n||!n.present||n.away||(dist(s.player,n)>70||!line(s.player,n))))return false;
-  if(verb==='take'){if(st?.id!==id)return false;if(s.player.carry){say(s,'Your hands are full. Serve your guest or set the dish down with X.');return false}s.player.carry=id;say(s,'Carrying '+id+'. Walk to a guest; E to offer it.');return true}
-  if(verb==='discard'){s.player.carry=null;return true}
-  if(verb==='serve'){if(!s.player.carry)return false;let favorite=n.favorite===s.player.carry,paid=!n.served;n.familiar+=favorite?2:1;n.served=1;s.coins+=paid?(favorite?5:3):0;n.memory.push('You brought '+s.player.carry+' on day '+s.day+'.');say(s,n.name+': '+(paid?(favorite?'You remembered. That is exactly what I needed.':'Thank you, keeper.'):'Another? Generous of you. Put it on your tab this time.'));s.player.carry=null;return true}
-  if(verb==='talk'){n.familiar++;if(id==='oren')learn(s,'wagons','Oren','direct conversation');if(id==='bram'&&n.familiar>=2)learn(s,'warning','Bram','direct conversation');if(id==='tomas'&&n.familiar>=2)learn(s,'diversion','Tomas','direct conversation');return true}
-  if(verb==='share'){if(!s.knowledge.wagons||s.world.leak||id!=='mira')return false;s.world.leak=true;n.known.push('wagons');s.knowledge.wagons.knownBy.push('Mira');n.memory.push('You trusted me with the wagon trail.');s.relationships['cedric:mira']='Mira is keeping something from Cedric';note(s,'You told Mira about the wagons. She promised to ask around.');say(s,'Mira: I know people who can help. Leave it with me.');return true}
-  if(verb==='sell'){if(!s.knowledge.wagons||s.world.sold||id!=='oren')return false;s.world.sold=true;s.coins+=15;n.known.push('keeper knows wagons');s.knowledge.wagons.knownBy.push('Oren');n.memory.push('You sold me the road news for 15 coins.');s.world.trade='Oren controls the road story';note(s,'Oren bought your road news. He asked you to stop troubling the watch.');return true}
-  if(verb==='withhold'){if(id==='tomas'&&s.events.search)s.world.guard='You declined the watch search; Tomas left without your testimony';n.memory.push('You declined to share your confidence.');note(s,'You kept your confidence from '+n.name+'.');say(s,n.name+': Fair enough. I will remember that.');return true}
-  if(verb==='exploit'){if(!s.knowledge.ledger||s.world.exploited||id!=='oren')return false;s.world.exploited=true;s.coins+=25;n.memory.push('You used my ledger against me.');s.world.trade='Oren pays for your silence; the detour remains';note(s,'Oren paid 25 coins for silence. His smile did not reach his eyes.');return true}
-  if(verb==='hire'){if(id!=='nell'||s.staff.hired||s.coins<12)return false;s.coins-=12;s.staff.hired=true;n.memory.push('You gave me steady work.');note(s,'Nell joined: 12 coins now, 3 additional coins each closing. Public-table service and imperfect reports.');return true}
-  if(verb==='report'){if(id!=='nell')return false;for(let r of s.staff.reports)learn(s,r.id,'Nell, recalling '+r.source,'secondhand');say(s,s.staff.reports.length?'Nell: That is what I think I heard. Do not stake the roof on it.':'Nell: Nothing I could make out. I cannot hear through a wall.');return true}
-  if(verb==='inspect'){if(id==='hearth'&&st?.id==='hearth'){learn(s,'carving','Treaty mark beneath the hearth','inspection');say(s,'The same three notches, carved beneath layers of soot.');return true}if(id==='room'&&st?.id==='room'&&!s.events['room'+s.day]){s.events['room'+s.day]=true;s.coins+=4;say(s,'You straighten room two. Four coins lie beside a note: the familiar did not eat the curtain.');return true}let e=s.evidence.find(e=>e.id===id&&dist(e,s.player)<75);if(e){if(id==='letter'){learn(s,'wagons','Westbridge letter','letter');learn(s,'diversion','Westbridge driver, by letter','letter')}say(s,e.text);if(id==='spill'){s.evidence=s.evidence.filter(v=>v!==e);s.coins+=1}return true}return false}
-  if(verb==='dispatch'){if(st?.id!=='board'||s.quest||!s.knowledge.wagons||s.day>4)return false;let party=['cedric',...(opts.bram?['bram']:[])],cost=8+(opts.bram?6:0)+(opts.supplies?4:0);if(s.coins<cost||party.some(id=>!npc(s,id).present||npc(s,id).away))return false;s.coins-=cost;s.quest={party,bram:!!opts.bram,supplies:!!opts.supplies,cautious:!!opts.cautious,warning:!!opts.warning&&!!s.knowledge.warning,departDay:s.day,returnDay:s.day+2,resolved:false,debriefed:false};for(let id of party){let n=npc(s,id);n.away=true;n.goal=null}note(s,'The party leaves for the Blackwood tollhouse. They expect two days on the road.');return true}
-  if(verb==='debrief'){if(id!=='cedric'||!s.quest?.resolved||s.quest.debriefed)return false;s.quest.debriefed=true;let o=s.quest.outcome;if(o==='proof'){learn(s,'ledger','Stamped tollhouse ledger','physical evidence',true);s.coins+=12;say(s,'Cedric: We came home. With proof. Bram even let me carry the ledger.');s.world.trade='Proof of the detour has reached the inn'}else if(o==='compromised'){s.knowledge.wagons.knownBy.push('Reed Knives');learn(s,'diversion','Cedric at the stripped tollhouse','eyewitness');s.relationships['cedric:mira']='Cedric distrusts Mira after the warehouse raid';say(s,'Cedric: The Reed Knives got there first. Mira knew where we were going. How?');note(s,'The tollhouse was stripped before your party arrived. Cedric is asking who told Mira.')}else{learn(s,'diversion','Injured Cedric','eyewitness');say(s,'Cedric: The bridge gave way. We had to turn back. I thought you knew the road.');note(s,'Cedric returned injured. Preparation would have changed this journey.')}return true}
-  if(verb==='cooperate'){if(id!=='tomas'||!s.events.search)return false;s.world.guard=s.knowledge.ledger?'Tomas has your evidence and permission to search':'Tomas searched but found no proof';n.memory.push('You cooperated with the watch search.');note(s,s.world.guard+'.');say(s,'Tomas: Thank you. I will write down what we actually found.');return true}
-  if(verb==='testify'){if(id!=='tomas'||!s.knowledge.ledger)return false;s.world.guard='Tomas holds the ledger testimony';s.world.trade='The watch reopened the road; trade returns to Rookcross';n.memory.push('You gave evidence, not just a name.');s.knowledge.ledger.knownBy.push('Tomas');note(s,'You gave Tomas the ledger. The watch can act on evidence.');return true}
-  if(verb==='sleep'){if(st?.id!=='bed'||s.time<145)return false;return nextDay(s)}return false;
- }
- function summary(s){return ['You kept the inn for seven days.',s.staff.hired?'Nell has a steady wage and a little more boat money.':'You carried the plates yourself.',s.quest?(s.quest.outcome==='proof'?'Cedric returned with proof and a story he can tell his sister.':s.quest.outcome==='compromised'?'Your party came home to a secret already spent. Cedric and Mira have things to say.':s.quest.outcome==='injured'?'Cedric came home hurt. Next time, preparation matters.':'An expedition is still on the road.'):'No expedition left your door this week.',s.world.leak?'Mira passed your confidence to the Reed Knives. Information kept moving after you let it go.':'Mira never received the wagon trail from you.',s.world.trade+'.',s.debt?'Oren is owed '+s.debt+' coins in favors.':'The roof is still yours.',s.knowledge.carving?'And those names beneath the hearth still do not explain themselves.':'The old inn has more to tell.']}
- return {fresh,tick,act,dist,line,route,blocked,learn,npc,activeTalks,perceive,nearNpc,nearStation,nextDay,summary};
+  function route(a, b) {
+    const step = 20,
+      key = (x, y) => x + "," + y;
+    const nearest = (p) => {
+      let points = [];
+      for (let dx = -2; dx <= 2; dx++)
+        for (let dy = -2; dy <= 2; dy++) {
+          let x = Math.round(p.x / step) + dx,
+            y = Math.round(p.y / step) + dy;
+          if (!blocked(x * step, y * step)) points.push({ x, y });
+        }
+      return points.sort(
+        (u, v) =>
+          Math.hypot(u.x * step - p.x, u.y * step - p.y) -
+          Math.hypot(v.x * step - p.x, v.y * step - p.y),
+      )[0];
+    };
+    let goal = nearest(b),
+      start = nearest(a);
+    if (!goal || !start) return [];
+    let q = [start],
+      seen = new Map([[key(start.x, start.y), null]]),
+      last = null;
+    for (let h = 0; h < q.length; h++) {
+      let n = q[h];
+      if (n.x === goal.x && n.y === goal.y) {
+        last = n;
+        break;
+      }
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
+        let x = n.x + dx,
+          y = n.y + dy,
+          k = key(x, y);
+        if (!seen.has(k) && !blocked(x * step, y * step)) {
+          seen.set(k, n);
+          q.push({ x, y });
+        }
+      }
+    }
+    if (!last) return [];
+    let out = [];
+    while (last) {
+      out.unshift({ x: last.x * step, y: last.y * step });
+      last = seen.get(key(last.x, last.y));
+    }
+    return out;
+  }
+  function fresh() {
+    return {
+      version: 1,
+      day: 1,
+      time: 0,
+      coins: 24,
+      debt: 0,
+      player: {
+        x: 250,
+        y: 320,
+        name: "Keeper",
+        color: "#d6ab5f",
+        carry: null,
+        path: [],
+      },
+      npcs: DATA.npcs.map((n, i) => ({
+        ...n,
+        x: 480 + i * 4,
+        y: 597,
+        present: false,
+        path: [],
+        memory: [],
+        known: [],
+        familiar: 0,
+        served: 0,
+        away: false,
+        state: "arriving",
+      })),
+      knowledge: {},
+      heard: {},
+      events: {},
+      relationships: {
+        "cedric:mira": "trusting",
+        "cedric:bram": "apprentice and mentor",
+        "cedric:nell": "tentative fondness",
+      },
+      world: {
+        trade: "Wagons avoid Rookcross",
+        leak: false,
+        sold: false,
+        exploited: false,
+        guard: "No complaint filed",
+      },
+      staff: { hired: false, reports: [] },
+      quest: null,
+      notes: [],
+      evidence: [],
+      paused: false,
+      ended: false,
+      settings: { clear: false, slow: false },
+      pour: 0,
+      toast: "",
+      toastTime: 0,
+    };
+  }
+  function note(s, t) {
+    s.notes.unshift({ day: s.day, text: t });
+    s.notes = s.notes.slice(0, 50);
+  }
+  function say(s, t) {
+    s.toast = t;
+    s.toastTime = 7;
+  }
+  function learn(s, id, source, channel = "heard", confirmed = false) {
+    let k = s.knowledge[id];
+    if (!k)
+      k = s.knowledge[id] = {
+        id,
+        observations: [],
+        knownBy: ["keeper"],
+        status: DATA.rumors[id].kind,
+      };
+    if (!k.observations.some((o) => o.source === source)) {
+      k.observations.push({
+        source,
+        origin: source.includes("recalling ")
+          ? source.split("recalling ")[1]
+          : source,
+        channel,
+        day: s.day,
+      });
+      if (new Set(k.observations.map((o) => o.origin || o.source)).size > 1)
+        k.status = "Corroborated";
+    }
+    if (confirmed) k.status = "Confirmed evidence";
+    return k;
+  }
+  function npc(s, id) {
+    return s.npcs.find((n) => n.id === id);
+  }
+  function activeTalks(s) {
+    return DATA.talks
+      .filter(
+        (t) =>
+          t.days.includes(s.day) &&
+          s.time >= t.start &&
+          s.time < t.end &&
+          npc(s, t.a).present &&
+          npc(s, t.b).present &&
+          !npc(s, t.a).away &&
+          !npc(s, t.b).away,
+      )
+      .filter((t) => dist(npc(s, t.a), npc(s, t.b)) < 145);
+  }
+  function perceive(s, t, observer = s.player) {
+    let a = npc(s, t.a),
+      d = dist(observer, a),
+      visible = line(observer, a);
+    let familiar = observer === s.player ? a.familiar : 0;
+    let near =
+      (t.whisper ? 75 : 118) +
+      (s.settings.clear ? 30 : 0) +
+      Math.min(15, familiar * 3);
+    if (!visible) return { tier: 0 };
+    if (d < near) return { tier: 3 };
+    if (d < near + 70) return { tier: 2 };
+    if (d < 340) return { tier: 1 };
+    return { tier: 0 };
+  }
+  function move(n, dt, speed = 65) {
+    if (!n.path?.length) return;
+    let p = n.path[0],
+      d = dist(n, p),
+      v = speed * dt;
+    if (d <= v) {
+      n.x = p.x;
+      n.y = p.y;
+      n.path.shift();
+    } else {
+      n.x += ((p.x - n.x) / d) * v;
+      n.y += ((p.y - n.y) / d) * v;
+    }
+  }
+  function target(n, p) {
+    if (!n.goal || dist(n.goal, p) > 12) {
+      n.goal = { ...p };
+      n.path = route(n, p);
+    }
+  }
+  function resetDay(s) {
+    for (let n of s.npcs) {
+      n.present = false;
+      n.served = 0;
+      n.path = [];
+      n.goal = null;
+      n.x = 480;
+      n.y = 597;
+    }
+    s.heard = {};
+    s.events["room" + s.day] = false;
+  }
+  function nextDay(s) {
+    if (s.paused) return false;
+    if (s.day === 7) {
+      s.ended = true;
+      s.paused = true;
+      return true;
+    }
+    s.coins -= s.staff.hired ? 7 : 4;
+    if (s.coins < 0) {
+      s.debt += -s.coins;
+      s.coins = 0;
+      note(s, "Oren covered the shortfall. He called it a favor, not a loan.");
+    }
+    s.day++;
+    s.time = 0;
+    resetDay(s);
+    note(s, "Morning: " + DATA.dayNames[s.day - 1] + ".");
+    return true;
+  }
+  function resolve(s) {
+    let q = s.quest;
+    if (!q || q.resolved || s.day < q.returnDay) return;
+    q.resolved = true;
+    const safe = q.bram && q.supplies && q.warning && q.cautious;
+    q.outcome = safe ? (s.world.leak ? "compromised" : "proof") : "injured";
+    for (let id of q.party) {
+      let n = npc(s, id);
+      n.away = false;
+      n.present = false;
+      n.goal = null;
+      n.memory.push(
+        q.outcome === "injured"
+          ? "You sent us onto a broken road without enough preparation."
+          : "You made sure we had a way home.",
+      );
+    }
+    s.relationships["cedric:bram"] = q.bram
+      ? "Bram brought Cedric home"
+      : "Cedric wishes Bram had come";
+    if (q.outcome === "injured")
+      s.relationships["cedric:mira"] = s.world.leak
+        ? "Cedric feels betrayed"
+        : "Mira worries for Cedric";
+  }
+  function tick(s, dt, input = {}) {
+    if (s.paused || s.ended) return;
+    dt = Math.min(dt, 0.1);
+    s.time += dt / (s.settings.slow ? 1.7 : 1);
+    s.toastTime = Math.max(0, s.toastTime - dt);
+    let dx = (input.right ? 1 : 0) - (input.left ? 1 : 0),
+      dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+    if (dx || dy) {
+      s.player.path = [];
+      let l = Math.hypot(dx, dy),
+        v = 155 * dt;
+      if (!blocked(s.player.x + (dx / l) * v, s.player.y))
+        s.player.x += (dx / l) * v;
+      if (!blocked(s.player.x, s.player.y + (dy / l) * v))
+        s.player.y += (dy / l) * v;
+    } else move(s.player, dt, 155);
+    resolve(s);
+    for (let n of s.npcs) {
+      if (n.away) {
+        if (n.present) {
+          target(n, { x: 480, y: 599 });
+          move(n, dt, 78);
+          if (dist(n, { x: 480, y: 599 }) < 20) n.present = false;
+        }
+        continue;
+      }
+      if (
+        s.time >= n.arrival &&
+        s.time < n.depart &&
+        !n.present &&
+        !s.events["left" + s.day + n.id]
+      ) {
+        n.present = true;
+        n.x = n.id === "mira" ? 915 : 480;
+        n.y = n.id === "mira" ? 220 : 597;
+        n.goal = null;
+      }
+      if (!n.present) continue;
+      if (s.time >= n.depart) {
+        target(n, { x: 480, y: 599 });
+        if (dist(n, { x: 480, y: 599 }) < 20) {
+          n.present = false;
+          s.events["left" + s.day + n.id] = true;
+          continue;
+        }
+      } else {
+        let base = DATA.npcs.find((v) => v.id === n.id),
+          p = { x: base.x, y: base.y };
+        let talk = DATA.talks.find(
+          (t) =>
+            t.days.includes(s.day) &&
+            s.time >= t.start - 8 &&
+            s.time < t.end &&
+            (t.a === n.id || t.b === n.id),
+        );
+        if (talk) {
+          let host = DATA.npcs.find((v) => v.id === talk.a);
+          p = {
+            x: Math.min(910, host.x + (talk.b === n.id ? 65 : 0)),
+            y: host.y,
+          };
+        }
+        if (n.id === "mira" && s.world.leak && s.day >= 3)
+          p = { x: 775, y: 230 };
+        if (n.id === "nell" && s.staff.hired) {
+          let guest = s.npcs.find(
+            (g) =>
+              g.present &&
+              !g.away &&
+              !g.served &&
+              g.id !== "nell" &&
+              g.x < 710 &&
+              s.time > 30,
+          );
+          if (guest) {
+            p = { x: guest.x - 28, y: guest.y };
+            if (dist(n, guest) < 45) {
+              guest.served = 1;
+              s.coins += 3;
+              n.state = "serving";
+            }
+          } else p = { x: 245, y: 265 };
+        }
+        target(n, p);
+      }
+      move(n, dt);
+      n.state = n.path.length ? "walking" : n.served ? "drinking" : "seated";
+    }
+    for (let t of activeTalks(s)) {
+      let p = perceive(s, t),
+        h = s.heard[t.id] || (s.heard[t.id] = { dwell: 0, learned: false });
+      if (p.tier === 3) {
+        h.dwell += dt;
+        if (h.dwell >= 3 && !h.learned) {
+          h.learned = true;
+          if (t.rumor) learn(s, t.rumor, npc(s, t.a).name, "overheard");
+        }
+      } else h.dwell = Math.max(0, h.dwell - dt * 0.5);
+      let nell = npc(s, "nell");
+      if (
+        s.staff.hired &&
+        t.rumor &&
+        nell.present &&
+        dist(nell, npc(s, t.a)) < 160 &&
+        line(nell, npc(s, t.a)) &&
+        !s.staff.reports.some((r) => r.id === t.rumor)
+      )
+        s.staff.reports.push({ id: t.rumor, source: npc(s, t.a).name });
+    }
+    if (s.day === 3 && s.time > 15 && !s.events.letter) {
+      s.events.letter = true;
+      s.evidence.push({
+        id: "letter",
+        x: 280,
+        y: 153,
+        text: "Westbridge asks after three missing wagons. The last driver mentioned a tollhouse detour.",
+      });
+    }
+    if (s.day === 2 && s.time > 110 && !s.events.spill) {
+      s.events.spill = true;
+      s.evidence.push({
+        id: "spill",
+        x: 620,
+        y: 240,
+        text: "A purple puddle. Tiny paw prints. The familiar has declined responsibility.",
+      });
+    }
+    if (s.day === 6 && s.time > 70 && !s.events.search) {
+      s.events.search = true;
+      s.world.guard = s.world.leak
+        ? "The watch is asking about a stripped tollhouse"
+        : "The watch needs testimony about the road";
+    }
+    if (input.interact) {
+      let st = nearStation(s);
+      if (st && ["ale", "wine", "tea", "stew"].includes(st.id)) {
+        s.pour += dt;
+        if (s.pour > 0.65) {
+          act(s, "take", st.id);
+          s.pour = 0;
+        }
+      }
+    } else s.pour = 0;
+    if (s.time >= 180) nextDay(s);
+  }
+  function nearStation(s) {
+    return DATA.stations
+      .filter((n) => dist(s.player, n) < 65 && line(s.player, n))
+      .sort((a, b) => dist(s.player, a) - dist(s.player, b))[0];
+  }
+  function nearNpc(s) {
+    return s.npcs
+      .filter(
+        (n) =>
+          n.present && !n.away && dist(s.player, n) < 65 && line(s.player, n),
+      )
+      .sort((a, b) => dist(s.player, a) - dist(s.player, b))[0];
+  }
+  function act(s, verb, id, opts = {}) {
+    if (s.paused || s.ended) return false;
+    let n = npc(s, id),
+      st = nearStation(s);
+    if (
+      [
+        "share",
+        "sell",
+        "withhold",
+        "exploit",
+        "serve",
+        "talk",
+        "hire",
+        "report",
+        "debrief",
+        "testify",
+        "cooperate",
+      ].includes(verb) &&
+      (!n ||
+        !n.present ||
+        n.away ||
+        dist(s.player, n) > 70 ||
+        !line(s.player, n))
+    )
+      return false;
+    if (verb === "take") {
+      if (st?.id !== id) return false;
+      if (s.player.carry) {
+        say(
+          s,
+          "Your hands are full. Serve your guest or set the dish down with X.",
+        );
+        return false;
+      }
+      s.player.carry = id;
+      say(s, "Carrying " + id + ". Walk to a guest; E to offer it.");
+      return true;
+    }
+    if (verb === "discard") {
+      s.player.carry = null;
+      return true;
+    }
+    if (verb === "serve") {
+      if (!s.player.carry) return false;
+      let favorite = n.favorite === s.player.carry,
+        paid = !n.served;
+      n.familiar += favorite ? 2 : 1;
+      n.served = 1;
+      s.coins += paid ? (favorite ? 5 : 3) : 0;
+      n.memory.push("You brought " + s.player.carry + " on day " + s.day + ".");
+      say(
+        s,
+        n.name +
+          ": " +
+          (paid
+            ? favorite
+              ? "You remembered. That is exactly what I needed."
+              : "Thank you, keeper."
+            : "Another? Generous of you. Put it on your tab this time."),
+      );
+      s.player.carry = null;
+      return true;
+    }
+    if (verb === "talk") {
+      n.familiar++;
+      if (id === "oren") learn(s, "wagons", "Oren", "direct conversation");
+      if (id === "bram" && n.familiar >= 2)
+        learn(s, "warning", "Bram", "direct conversation");
+      if (id === "tomas" && n.familiar >= 2)
+        learn(s, "diversion", "Tomas", "direct conversation");
+      return true;
+    }
+    if (verb === "share") {
+      if (!s.knowledge.wagons || s.world.leak || id !== "mira") return false;
+      s.world.leak = true;
+      n.known.push("wagons");
+      s.knowledge.wagons.knownBy.push("Mira");
+      n.memory.push("You trusted me with the wagon trail.");
+      s.relationships["cedric:mira"] = "Mira is keeping something from Cedric";
+      note(s, "You told Mira about the wagons. She promised to ask around.");
+      say(s, "Mira: I know people who can help. Leave it with me.");
+      return true;
+    }
+    if (verb === "sell") {
+      if (!s.knowledge.wagons || s.world.sold || id !== "oren") return false;
+      s.world.sold = true;
+      s.coins += 15;
+      n.known.push("keeper knows wagons");
+      s.knowledge.wagons.knownBy.push("Oren");
+      n.memory.push("You sold me the road news for 15 coins.");
+      s.world.trade = "Oren controls the road story";
+      note(
+        s,
+        "Oren bought your road news. He asked you to stop troubling the watch.",
+      );
+      return true;
+    }
+    if (verb === "withhold") {
+      if (id === "tomas" && s.events.search)
+        s.world.guard =
+          "You declined the watch search; Tomas left without your testimony";
+      n.memory.push("You declined to share your confidence.");
+      note(s, "You kept your confidence from " + n.name + ".");
+      say(s, n.name + ": Fair enough. I will remember that.");
+      return true;
+    }
+    if (verb === "exploit") {
+      if (!s.knowledge.ledger || s.world.exploited || id !== "oren")
+        return false;
+      s.world.exploited = true;
+      s.coins += 25;
+      n.memory.push("You used my ledger against me.");
+      s.world.trade = "Oren pays for your silence; the detour remains";
+      note(
+        s,
+        "Oren paid 25 coins for silence. His smile did not reach his eyes.",
+      );
+      return true;
+    }
+    if (verb === "hire") {
+      if (id !== "nell" || s.staff.hired || s.coins < 12) return false;
+      s.coins -= 12;
+      s.staff.hired = true;
+      n.memory.push("You gave me steady work.");
+      note(
+        s,
+        "Nell joined: 12 coins now, 3 additional coins each closing. Public-table service and imperfect reports.",
+      );
+      return true;
+    }
+    if (verb === "report") {
+      if (id !== "nell") return false;
+      for (let r of s.staff.reports)
+        learn(s, r.id, "Nell, recalling " + r.source, "secondhand");
+      say(
+        s,
+        s.staff.reports.length
+          ? "Nell: That is what I think I heard. Do not stake the roof on it."
+          : "Nell: Nothing I could make out. I cannot hear through a wall.",
+      );
+      return true;
+    }
+    if (verb === "inspect") {
+      if (id === "hearth" && st?.id === "hearth") {
+        learn(s, "carving", "Treaty mark beneath the hearth", "inspection");
+        say(s, "The same three notches, carved beneath layers of soot.");
+        return true;
+      }
+      if (id === "room" && st?.id === "room" && !s.events["room" + s.day]) {
+        s.events["room" + s.day] = true;
+        s.coins += 4;
+        say(
+          s,
+          "You straighten room two. Four coins lie beside a note: the familiar did not eat the curtain.",
+        );
+        return true;
+      }
+      let e = s.evidence.find((e) => e.id === id && dist(e, s.player) < 75);
+      if (e) {
+        if (id === "letter") {
+          learn(s, "wagons", "Westbridge letter", "letter");
+          learn(s, "diversion", "Westbridge driver, by letter", "letter");
+        }
+        say(s, e.text);
+        if (id === "spill") {
+          s.evidence = s.evidence.filter((v) => v !== e);
+          s.coins += 1;
+        }
+        return true;
+      }
+      return false;
+    }
+    if (verb === "dispatch") {
+      if (st?.id !== "board" || s.quest || !s.knowledge.wagons || s.day > 4)
+        return false;
+      let party = ["cedric", ...(opts.bram ? ["bram"] : [])],
+        cost = 8 + (opts.bram ? 6 : 0) + (opts.supplies ? 4 : 0);
+      if (
+        s.coins < cost ||
+        party.some((id) => !npc(s, id).present || npc(s, id).away)
+      )
+        return false;
+      s.coins -= cost;
+      s.quest = {
+        party,
+        bram: !!opts.bram,
+        supplies: !!opts.supplies,
+        cautious: !!opts.cautious,
+        warning: !!opts.warning && !!s.knowledge.warning,
+        departDay: s.day,
+        returnDay: s.day + 2,
+        resolved: false,
+        debriefed: false,
+      };
+      for (let id of party) {
+        let n = npc(s, id);
+        n.away = true;
+        n.goal = null;
+      }
+      note(
+        s,
+        "The party leaves for the Blackwood tollhouse. They expect two days on the road.",
+      );
+      return true;
+    }
+    if (verb === "debrief") {
+      if (id !== "cedric" || !s.quest?.resolved || s.quest.debriefed)
+        return false;
+      s.quest.debriefed = true;
+      let o = s.quest.outcome;
+      if (o === "proof") {
+        learn(
+          s,
+          "ledger",
+          "Stamped tollhouse ledger",
+          "physical evidence",
+          true,
+        );
+        s.coins += 12;
+        say(
+          s,
+          "Cedric: We came home. With proof. Bram even let me carry the ledger.",
+        );
+        s.world.trade = "Proof of the detour has reached the inn";
+      } else if (o === "compromised") {
+        s.knowledge.wagons.knownBy.push("Reed Knives");
+        learn(s, "diversion", "Cedric at the stripped tollhouse", "eyewitness");
+        s.relationships["cedric:mira"] =
+          "Cedric distrusts Mira after the warehouse raid";
+        say(
+          s,
+          "Cedric: The Reed Knives got there first. Mira knew where we were going. How?",
+        );
+        note(
+          s,
+          "The tollhouse was stripped before your party arrived. Cedric is asking who told Mira.",
+        );
+      } else {
+        learn(s, "diversion", "Injured Cedric", "eyewitness");
+        say(
+          s,
+          "Cedric: The bridge gave way. We had to turn back. I thought you knew the road.",
+        );
+        note(
+          s,
+          "Cedric returned injured. Preparation would have changed this journey.",
+        );
+      }
+      return true;
+    }
+    if (verb === "cooperate") {
+      if (id !== "tomas" || !s.events.search) return false;
+      s.world.guard = s.knowledge.ledger
+        ? "Tomas has your evidence and permission to search"
+        : "Tomas searched but found no proof";
+      n.memory.push("You cooperated with the watch search.");
+      note(s, s.world.guard + ".");
+      say(s, "Tomas: Thank you. I will write down what we actually found.");
+      return true;
+    }
+    if (verb === "testify") {
+      if (id !== "tomas" || !s.knowledge.ledger) return false;
+      s.world.guard = "Tomas holds the ledger testimony";
+      s.world.trade = "The watch reopened the road; trade returns to Rookcross";
+      n.memory.push("You gave evidence, not just a name.");
+      s.knowledge.ledger.knownBy.push("Tomas");
+      note(s, "You gave Tomas the ledger. The watch can act on evidence.");
+      return true;
+    }
+    if (verb === "sleep") {
+      if (st?.id !== "bed" || s.time < 145) return false;
+      return nextDay(s);
+    }
+    return false;
+  }
+  function summary(s) {
+    return [
+      "You kept the inn for seven days.",
+      s.staff.hired
+        ? "Nell has a steady wage and a little more boat money."
+        : "You carried the plates yourself.",
+      s.quest
+        ? s.quest.outcome === "proof"
+          ? "Cedric returned with proof and a story he can tell his sister."
+          : s.quest.outcome === "compromised"
+            ? "Your party came home to a secret already spent. Cedric and Mira have things to say."
+            : s.quest.outcome === "injured"
+              ? "Cedric came home hurt. Next time, preparation matters."
+              : "An expedition is still on the road."
+        : "No expedition left your door this week.",
+      s.world.leak
+        ? "Mira passed your confidence to the Reed Knives. Information kept moving after you let it go."
+        : "Mira never received the wagon trail from you.",
+      s.world.trade + ".",
+      s.debt
+        ? "Oren is owed " + s.debt + " coins in favors."
+        : "The roof is still yours.",
+      s.knowledge.carving
+        ? "And those names beneath the hearth still do not explain themselves."
+        : "The old inn has more to tell.",
+    ];
+  }
+  function restore(raw) {
+    try {
+      const s = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (
+        !s ||
+        s.version !== 1 ||
+        !Number.isInteger(s.day) ||
+        s.day < 1 ||
+        s.day > 7 ||
+        !Number.isFinite(s.time) ||
+        s.time < 0 ||
+        s.time > 181
+      )
+        return fresh();
+      const base = fresh();
+      if (Object.keys(base).some((key) => !(key in s))) return fresh();
+      if (
+        !Array.isArray(s.npcs) ||
+        s.npcs.length !== DATA.npcs.length ||
+        !Array.isArray(s.notes) ||
+        !Array.isArray(s.evidence) ||
+        !Array.isArray(s.staff?.reports)
+      )
+        return fresh();
+      if (
+        !s.player ||
+        !Number.isFinite(s.player.x) ||
+        !Number.isFinite(s.player.y) ||
+        typeof s.player.name !== "string" ||
+        typeof s.player.color !== "string"
+      )
+        return fresh();
+      if (
+        !s.knowledge ||
+        !s.events ||
+        !s.relationships ||
+        !s.world ||
+        !s.settings ||
+        !Number.isFinite(s.coins) ||
+        !Number.isFinite(s.debt)
+      )
+        return fresh();
+      if (
+        DATA.npcs.some(
+          (def) =>
+            !s.npcs.some(
+              (n) =>
+                n.id === def.id &&
+                Number.isFinite(n.x) &&
+                Number.isFinite(n.y) &&
+                Array.isArray(n.memory) &&
+                Array.isArray(n.known) &&
+                Number.isFinite(n.familiar),
+            ),
+        )
+      )
+        return fresh();
+      if (
+        Object.values(s.knowledge).some(
+          (k) =>
+            !DATA.rumors[k.id] ||
+            !Array.isArray(k.observations) ||
+            !Array.isArray(k.knownBy),
+        )
+      )
+        return fresh();
+      if (
+        s.quest &&
+        (!Array.isArray(s.quest.party) || !Number.isInteger(s.quest.returnDay))
+      )
+        return fresh();
+      s.paused = false;
+      s.player.path = [];
+      for (const n of s.npcs) {
+        n.path = [];
+        n.goal = null;
+      }
+      return s;
+    } catch {
+      return fresh();
+    }
+  }
+  return {
+    fresh,
+    restore,
+    tick,
+    act,
+    dist,
+    line,
+    route,
+    blocked,
+    learn,
+    npc,
+    activeTalks,
+    perceive,
+    nearNpc,
+    nearStation,
+    nextDay,
+    summary,
+  };
 })();
-if(typeof module!=='undefined')module.exports=Sim;
+if (typeof module !== "undefined") module.exports = Sim;
 
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),$=id=>document.getElementById(id);
-let state=Sim.fresh(),keys={},modal=null,autosave=0,last=0,started=false,sound=null;
-try{let saved=JSON.parse(localStorage.getItem('hearth-hush-v1'));if(saved?.version===1&&saved.player&&saved.npcs?.length===8&&saved.world&&saved.settings){state=saved;state.paused=false;state.player.path=[];for(let n of state.npcs){n.path=[];n.goal=null}}}catch{}
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function save(){try{localStorage.setItem('hearth-hush-v1',JSON.stringify(state));return true}catch{return false}}
-function panel(html,kind='read'){modal=kind;$('panel').innerHTML=html;$('overlay').style.display='flex'}
-function close(){modal=null;$('overlay').style.display='none';keys={}}
-function btn(label,action,disabled=false){return `<button ${disabled?'disabled':''} onclick="${action}">${label}</button>`}
-function pause(){if(modal==='welcome'||state.ended)return;state.paused=!state.paused;keys={};if(!state.paused&&modal==='journal')close()}
-function doAct(verb,id,opts){const ok=Sim.act(state,verb,id,opts);if(!ok&&!state.paused){state.toast='That needs the right person, place, time, or enough coins.';state.toastTime=4}save();return ok}
-function welcome(){state.paused=true;panel(`<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Keep your own counsel</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time||state.day>1?'Return to the inn':'Unlock the door','startGame()')}</div>`,'welcome')}
-function startGame(){state.player.name=$('keeperName').value.trim()||'Keeper';state.player.color=$('coat').value;state.paused=false;started=true;close();if(state.ended){state.paused=true;ending()}save()}
-function talk(id){let n=Sim.npc(state,id);doAct('talk',id);let memory=n.memory.slice(-3).map(t=>'<p class="muted">'+esc(t)+'</p>').join('');let q=state.quest;let personal=n.id==='oren'&&state.world.sold?'I paid for the news. I would prefer it did not become a public performance.':n.id==='tomas'&&state.events.search?'There has been a complaint about the tollhouse. Will you cooperate, or keep your confidence?':n.id==='cedric'&&q?.resolved?(q.outcome==='proof'?'Bram made us stop before the bridge. We found something you should see.':q.outcome==='compromised'?'The warehouse was stripped. The Reed Knives knew where to look. Who told them?':'The bridge gave way. I am back. I do not especially want to talk about the rest.'):n.id==='bram'&&n.familiar>=2?'The north bridge is rotten. Take rope and use the ridge. Come home before you get brave.':n.id==='tomas'&&n.familiar>=2?'The last wheel tracks turned toward the tollhouse. Willingly, by the look of it. That is a lead, not proof.':null;panel(`<div class="eyebrow">${esc(n.role)} • ${esc(n.id==='mira'&&!state.knowledge.knives?'Independent, she says':n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length&&n.id==='mira'&&state.world.leak?'You gave me the road news. I put it to work. That is what I do.':personal||(n.familiar>1?DATA.daily[n.id][state.day-1]:n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar>2?'Likes '+n.favorite+'. You are becoming familiar.':'Their habits will become familiar in time.'}</p>${memory}<div class="actions">${n.id==='mira'?btn('Share the wagon lead',"choice('share','mira')",!state.knowledge.wagons||state.world.leak):''}${n.id==='oren'?btn('Sell road news · 15 coins',"choice('sell','oren')",!state.knowledge.wagons||state.world.sold)+btn('Use the ledger · 25 coins',"choice('exploit','oren')",!state.knowledge.ledger||state.world.exploited):''}${n.id==='nell'?btn(state.staff.hired?'Nell is on staff':'Hire Nell · 12 coins',"choice('hire','nell')",state.staff.hired||state.coins<12)+btn('Ask what she heard',"choice('report','nell')",!state.staff.hired):''}${n.id==='cedric'&&q?.resolved?btn('Ask about the journey',"choice('debrief','cedric')",q.debriefed):''}${n.id==='tomas'?(state.events.search?btn('Cooperate with the search',"choice('cooperate','tomas')"):'')+btn('Give ledger testimony',"choice('testify','tomas')",!state.knowledge.ledger):''}${btn('Keep your confidence',`choice('withhold','${id}')`)}${btn('Back to the room','close()')}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,'talk')}
-function choice(v,id){if(state.paused)return;doAct(v,id);close()}
-function board(){let q=state.quest,letter=state.evidence.find(e=>e.id==='letter');if(letter)doAct('inspect','letter');panel(`<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter?esc(letter.text):'A pin, a map of Rookcross, and a space where the rest of the world ought to be.'}</p>${q?`<h3>Blackwood tollhouse</h3><p>${q.resolved?'The party is back in town. Find Cedric when he comes in.':'Cedric'+(q.bram?' and Bram':'')+' left on day '+q.departDay+'. They expected two days on the road.'}</p>`:`<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning?'checked':'disabled'}> Share Bram's ridge-route warning ${state.knowledge.warning?'':'(not learned)'}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn('Agree and send them',"dispatch()",!state.knowledge.wagons||state.day>4)}`}
-<div class="actions">${btn('Read journal','journal()')}${btn('Back to the room','close()')}</div>`,'board')}
-function dispatch(){if(state.paused)return;let opts={};for(let id of ['bram','supplies','cautious','warning'])opts[id]=$(id).checked;if(doAct('dispatch',null,opts))close()}
-function journal(filter=''){panel(`<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn('Back to the room','close()')}</div>`,'journal');filterJournal(filter)}
-function filterJournal(filter){let f=filter.toLowerCase(),entries=Object.values(state.knowledge).filter(k=>JSON.stringify(k).toLowerCase().includes(f)||JSON.stringify(DATA.rumors[k.id]).toLowerCase().includes(f));$('entries').innerHTML=entries.map(k=>`<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map(o=>`Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join('<br>')}<br>Known to you: ${[...new Set(k.knownBy)].map(esc).join(', ')}</p></article>`).join('')+(!entries.length?'<p>No matching notes. Begin with the people in the room.</p>':'')+'<h3>People & choices</h3>'+state.notes.filter(n=>n.text.toLowerCase().includes(f)).map(n=>`<p class="muted">Day ${n.day} — ${esc(n.text)}</p>`).join('')+Object.entries(state.relationships).filter(([k,v])=>(k+v).includes(f)&&k.split(':').every(id=>Sim.npc(state,id).familiar>0)).map(([k,v])=>`<p class="muted">${esc(k.replace(':',' & '))}: ${esc(v)}</p>`).join('')}
-function settings(){panel(`<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear?'checked':''} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow?'checked':''} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn('Save now',"state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;close()")}${btn('New week','confirmReset()')}${btn('Back','close()')}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,'settings')}
-function confirmReset(){panel('<h2>Begin again?</h2><p>This replaces the saved week in this browser.</p><div class="actions">'+btn('Start a fresh week',"state=Sim.fresh();close();welcome()")+btn('Keep this week','close()')+'</div>','settings')}
-function ending(){panel('<div class="eyebrow">Seven days at Rookcross</div><h2>The door will open again.</h2>'+Sim.summary(state).map(s=>'<p>'+esc(s)+'</p>').join('')+'<div class="actions">'+btn('Read your journal','journal()')+btn('Try another week','confirmReset()')+btn('Look at the room','close()')+'</div><p class="muted">End of this vertical slice. Long-term romance, town simulation and construction belong to the future game.</p>','ending')}
-function interact(){if(state.paused||modal)return;let n=Sim.nearNpc(state),st=Sim.nearStation(state),e=state.evidence.find(e=>Sim.dist(e,state.player)<65);if(n&&state.player.carry){doAct('serve',n.id);return}if(e&&e.id==='spill'){doAct('inspect',e.id);return}if(st&&(!n||Sim.dist(st,state.player)<Sim.dist(n,state.player))){if(st.id==='board')board();else if(st.id==='bed'){if(!doAct('sleep')){state.toast='Closing comes near the end of the day. There is time to listen.';state.toastTime=5}}else if(st.id==='room'||st.id==='hearth')doAct('inspect',st.id);return}if(n)talk(n.id)}
-window.addEventListener('keydown',e=>{if(e.target.matches('input,select'))return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();let k=e.key.toLowerCase();if(!e.repeat){if(k===' '){if(modal!=='welcome'&&!state.ended)pause();return}if(k==='escape'){close();return}if(k==='j'){modal==='journal'?close():journal();return}if(k==='e')interact();if(k==='x'&&!modal)doAct('discard')}keys[k]=true});
-window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEventListener('blur',()=>{keys={};if(started)state.paused=true;save()});
-canvas.addEventListener('pointerdown',e=>{if(state.paused||modal)return;let r=canvas.getBoundingClientRect(),p={x:(e.clientX-r.left)*1000/r.width,y:(e.clientY-r.top)*660/r.height};if(!Sim.blocked(p.x,p.y))state.player.path=Sim.route(state.player,p)});
-function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
-function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill()}
-function text(t,x,y,size=13,color='#ddd1b5',align='center'){ctx.font=`${size}px Georgia`;ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(t,x,y)}
-function bubble(t,x,y,color='#d9d3b7'){ctx.font='14px Georgia';let w=Math.min(370,ctx.measureText(t).width+22);rect(x-w/2,y-22,w,29,'#1d2b28ed');text(t,x,y-3,14,color)}
-function person(n,isPlayer=false){let moving=n.path?.length,walk=moving?Math.sin(performance.now()/95)*3:0;ellipse(n.x,n.y+9,17,8,'#0005');rect(n.x-9,n.y+2,6,10+walk,'#282828');rect(n.x+3,n.y+2,6,10-walk,'#282828');ellipse(n.x,n.y-4,n.id==='bram'?16:12,17,n.color);ellipse(n.x,n.y-21,9,10,'#d4ad80');ellipse(n.x,n.y-26,10,6,n.hair||'#3e3430');if(n.id==='bram')ellipse(n.x,n.y-14,9,9,n.hair);if(n.id==='ivo'){ctx.fillStyle=n.color;ctx.beginPath();ctx.moveTo(n.x-13,n.y-24);ctx.lineTo(n.x+3,n.y-50);ctx.lineTo(n.x+13,n.y-24);ctx.fill()}if(n.id==='tomas')rect(n.x-11,n.y-28,22,5,'#a6b6b4');if(isPlayer){ctx.strokeStyle='#eed7a0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(n.x,n.y+10,21,11,0,0,7);ctx.stroke();rect(n.x-7,n.y-5,14,16,'#d5c4a0')}if(n.served||isPlayer&&n.carry){rect(n.x+13,n.y-9,8,10,'#c4994a');rect(n.x+13,n.y-10,8,3,'#efe1bc')}if(n.id==='cedric'&&state.quest?.outcome==='injured')rect(n.x-11,n.y-5,21,4,'#ded8bd');text(isPlayer?state.player.name:n.name,n.x,n.y+29,13,isPlayer?'#ffe6ad':'#e0d4bd')}
-function draw(){ctx.clearRect(0,0,1000,660);rect(0,0,1000,660,'#19282c');for(let i=0;i<45;i++){let x=(i*73+performance.now()*.015)%1000,y=(i*43+performance.now()*.09)%660;ctx.strokeStyle='#a6c0bf15';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-4,y+13);ctx.stroke()}
- rect(30,30,930,600,'#282c28');rect(44,44,900,572,'#65503a');for(let y=48;y<617;y+=23){rect(44,y,900,1,'#302b2580');for(let x=44+(Math.floor(y/23)%2)*54;x<941;x+=110)rect(x,y,1,22,'#382f2870')}for(let i=0;i<90;i++){let x=60+(i*131)%850,y=65+(i*79)%535;rect(x,y,22,1,'#ad885020')}
- rect(45,45,348,139,'#3b453d');rect(728,49,212,287,'#4a463c');rect(750,180,172,147,'#6c5141');rect(230,325,450,262,'#4c3e34');ctx.strokeStyle='#89704a';ctx.lineWidth=2;ctx.strokeRect(240,335,430,242);for(let x=251;x<655;x+=23){rect(x,340,8,3,'#b0985b60');rect(x,568,8,3,'#b0985b60')}
- for(let o of DATA.walls){rect(o.x-3,o.y,o.w+6,o.h+4,'#252c27');rect(o.x,o.y,o.w,o.h,'#897457');rect(o.x+3,o.y+3,Math.max(2,o.w-6),Math.max(2,o.h-6),'#584832')}
- for(let f of DATA.furniture){rect(f.x-3,f.y+6,f.w+6,f.h,'#0004');rect(f.x,f.y,f.w,f.h,'#463428');rect(f.x+4,f.y+3,f.w-8,f.h-7,f.type==='bed'?'#999276':'#977046');for(let y=f.y+11;y<f.y+f.h-6;y+=12)rect(f.x+5,y,f.w-10,1,'#37291e50');if(f.type==='bed')rect(f.x+6,f.y+7,26,f.h-15,'#d0c4a2');if(f.type==='table'){ellipse(f.x+f.w/2,f.y+14,7,5,'#ccb993');rect(f.x+20,f.y+12,6,10,'#bd8f43');rect(f.x+f.w-27,f.y+15,6,10,'#bd8f43');for(let x of [f.x+12,f.x+f.w-24]){rect(x,f.y-19,19,11,'#493929');rect(x,f.y+f.h+8,19,11,'#493929')}}}
- // Quiet signs of a once-beautiful working inn.
-for(let x of [195,687]){rect(x,52,10,128,'#322e26');rect(x-4,68,18,12,'#746044');rect(x+2,54,2,123,'#ba946633')}
-for(let x of [330,630]){rect(x,44,62,9,'#2c3330');rect(x+5,45,52,5,'#708b8870')}
-for(let p of [[195,210],[685,210],[905,375],[225,570]]){ellipse(p[0],p[1],38,27,'#eeb7660b');rect(p[0]-5,p[1]-7,10,15,'#c8a457');rect(p[0]-2,p[1]-4,4,8,'#ffe4a4')}
-for(let i=0;i<5;i++)rect(253+i*13,77,9,27-i%2*6,['#647973','#b7955e','#a5654e'][i%3]);rect(313,107,26,13,'#daca9e');rect(318,110,15,1,'#77654d');
-for(let p of [[356,395],[560,395],[685,510],[810,281]]){ellipse(p[0],p[1],8,5,'#8f9b8633');rect(p[0]-2,p[1]-9,4,10,'#e0c995');ellipse(p[0],p[1]-10,2,4,'#ffe3a0')}
-for(let i=0;i<6;i++){rect(580+i*15,92,9,3,'#84744b');rect(583+i*15,95,3,6,'#84744b')}
-rect(190,480,22,50,'#655e49');for(let i=0;i<4;i++)rect(188,486+i*10,26,2,'#32382d');ellipse(200,477,13,6,'#909177');
-// Hearth, casks, books and the room's old structural details.
- rect(460,45,104,54,'#969083');rect(470,48,84,41,'#302d25');for(let i=0;i<9;i++){let h=15+Math.sin(performance.now()/220+i*4)*10;ellipse(480+i*8,83-h/2,5,h/2,i%2?'#edb458':'#c5713f')}
- let glow=ctx.createRadialGradient(510,88,5,510,88,180);glow.addColorStop(0,'#edaf5826');glow.addColorStop(1,'#edaf5800');ctx.fillStyle=glow;ctx.fillRect(325,40,370,230);
- for(let st of DATA.stations.filter(s=>['ale','wine','tea'].includes(s.id))){ellipse(st.x,st.y,20,18,st.id==='tea'?'#879087':'#927047');ctx.strokeStyle='#342e25';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(st.x,st.y,16,15,0,0,7);ctx.stroke();rect(st.x+14,st.y-2,12,5,'#c6aa6e');text(st.id,st.x,st.y+29,11)}ellipse(120,440,23,19,'#343d37');ellipse(120,437,18,12,'#b48746');text('stew',120,472,11);rect(95,75,35,53,'#9a8b6b');rect(97,78,31,12,'#d5c7a0');rect(268,135,26,21,'#e0cd9e');text('OFFICE',300,58,11,'#c4bd9b');text('ROOM TWO',835,60,11,'#c4bd9b');text('PRIVATE BOOTH',830,320,10,'#c4bd9b');text('ROOKCROSS',500,647,12,'#a8b7ad');rect(445,610,90,20,'#34372e');text('front door',490,629,11,'#a5a58a');text('back door',922,218,10,'#c4bd9b');
- for(let e of state.evidence){if(e.id==='spill'){ellipse(e.x,e.y,21,12,'#8b72a777');for(let j=0;j<4;j++)ellipse(e.x+j*12,e.y-j*7,3,2,'#987ca8')}else{rect(e.x-10,e.y-7,20,14,'#e9d6a7')}}
- for(let n of [...state.npcs.filter(n=>n.present&&Sim.line(state.player,n)),{...state.player,isPlayer:true}].sort((a,b)=>a.y-b.y))person(n,n.isPlayer);
- let best=null;for(let t of Sim.activeTalks(state)){let p=Sim.perceive(state,t),n=Sim.npc(state,t.a),h=state.heard[t.id];if(p.tier===1){text(state.settings.clear?'speaking':'···',n.x,n.y-46,state.settings.clear?13:18,'#e9dabc')}if(p.tier===2)bubble(t.fragment,n.x,n.y-45);if(p.tier===3){text(t.whisper?'…':'···',n.x,n.y-46,20,'#ead6a5');if(!best||h?.dwell>best.dwell)best={t,dwell:h?.dwell||0}}}
- $('caption').style.display=best?'block':'none';if(best)$('caption').textContent=best.dwell>=3?best.t.line:best.t.fragment+' (linger nearby)';
- let near=Sim.nearNpc(state),st=Sim.nearStation(state);let hint=state.paused?'PAUSED · inspect freely · Space to resume':state.player.carry?`Carrying ${state.player.carry} · E near a guest · X to set down`:near?`E · Talk to ${near.name}`:st?(['ale','wine','tea','stew'].includes(st.id)?`Hold E · Prepare ${st.id}`:`E · ${st.name}`):'Walk close. Listen a little longer.';
- rect(260,5,480,28,'#102020d9');text(hint,500,24,14,'#ead7ae');
- if(state.pour>0){rect(state.player.x-15,state.player.y+36,30,3,'#272d28');rect(state.player.x-15,state.player.y+36,30*state.pour/.65,3,'#e7c578')}
- let phase=state.time<35?'Morning':state.time<110?'Afternoon':state.time<145?'Evening':'Closing';$('status').innerHTML=`<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><br>${DATA.dayNames[state.day-1]} &nbsp; · &nbsp; ${state.coins} coins`;$('pause').textContent=state.paused?'Resume':'Pause';$('toast').textContent=state.toastTime>0?state.toast:state.staff.hired?'Nell has the public tables. You have a little more room to listen.':'A warm room. Eight lives. You cannot be everywhere.';
- if(state.paused&&modal!=='welcome'){rect(45,45,900,571,'#15222330');text(state.ended?'WEEK COMPLETE':'PAUSED',500,312,32,'#ffebbc')}
- if(modal){for(let b of $('panel').querySelectorAll('button')){if(/choice\(|dispatch\(/.test(b.getAttribute('onclick')||'')){if(!('originalDisabled' in b.dataset))b.dataset.originalDisabled=String(b.disabled);b.disabled=state.paused||b.dataset.originalDisabled==='true'}}}
+const canvas = document.getElementById("game"),
+  ctx = canvas.getContext("2d"),
+  $ = (id) => document.getElementById(id);
+let state = Sim.fresh(),
+  keys = {},
+  modal = null,
+  autosave = 0,
+  last = 0,
+  started = false,
+  sound = null;
+try {
+  state = Sim.restore(localStorage.getItem("hearth-hush-v1"));
+} catch {}
+const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+function save() {
+  try {
+    localStorage.setItem("hearth-hush-v1", JSON.stringify(state));
+    return true;
+  } catch {
+    return false;
+  }
 }
-function frame(t){let dt=Math.min(.1,(t-last)/1000||0);last=t;let wasEnded=state.ended;Sim.tick(state,dt,modal?{}:{up:keys.w||keys.arrowup,down:keys.s||keys.arrowdown,left:keys.a||keys.arrowleft,right:keys.d||keys.arrowright,interact:keys.e});if(state.ended&&!wasEnded)ending();autosave+=dt;if(autosave>8){save();autosave=0}draw();requestAnimationFrame(frame)}
-welcome();requestAnimationFrame(frame);
+function panel(html, kind = "read") {
+  modal = kind;
+  $("panel").innerHTML = html;
+  $("overlay").style.display = "flex";
+}
+function close() {
+  modal = null;
+  $("overlay").style.display = "none";
+  keys = {};
+}
+function btn(label, action, disabled = false) {
+  return `<button ${disabled ? "disabled" : ""} onclick="${action}">${label}</button>`;
+}
+function pause() {
+  if (modal === "welcome" || state.ended) return;
+  state.paused = !state.paused;
+  keys = {};
+  if (!state.paused && modal === "journal") close();
+}
+function doAct(verb, id, opts) {
+  const ok = Sim.act(state, verb, id, opts);
+  if (!ok && !state.paused) {
+    state.toast = "That needs the right person, place, time, or enough coins.";
+    state.toastTime = 4;
+  }
+  save();
+  return ok;
+}
+function welcome() {
+  state.paused = true;
+  panel(
+    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Keep your own counsel</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
+    "welcome",
+  );
+}
+function startGame() {
+  state.player.name = $("keeperName").value.trim() || "Keeper";
+  state.player.color = $("coat").value;
+  state.paused = false;
+  started = true;
+  close();
+  if (state.ended) {
+    state.paused = true;
+    ending();
+  }
+  save();
+}
+function talk(id) {
+  let n = Sim.npc(state, id);
+  doAct("talk", id);
+  let memory = n.memory
+    .slice(-3)
+    .map((t) => '<p class="muted">' + esc(t) + "</p>")
+    .join("");
+  let q = state.quest;
+  let personal =
+    n.id === "oren" && state.world.sold
+      ? "I paid for the news. I would prefer it did not become a public performance."
+      : n.id === "tomas" && state.events.search
+        ? "There has been a complaint about the tollhouse. Will you cooperate, or keep your confidence?"
+        : n.id === "cedric" && q?.resolved
+          ? q.outcome === "proof"
+            ? "Bram made us stop before the bridge. We found something you should see."
+            : q.outcome === "compromised"
+              ? "The warehouse was stripped. The Reed Knives knew where to look. Who told them?"
+              : "The bridge gave way. I am back. I do not especially want to talk about the rest."
+          : n.id === "bram" && n.familiar >= 2
+            ? "The north bridge is rotten. Take rope and use the ridge. Come home before you get brave."
+            : n.id === "tomas" && n.familiar >= 2
+              ? "The last wheel tracks turned toward the tollhouse. Willingly, by the look of it. That is a lead, not proof."
+              : null;
+  panel(
+    `<div class="eyebrow">${esc(n.role)} • ${esc(n.id === "mira" && !state.knowledge.knives ? "Independent, she says" : n.faction)}</div><h2>${n.name}</h2><p>“${esc(n.memory.length && n.id === "mira" && state.world.leak ? "You gave me the road news. I put it to work. That is what I do." : personal || (n.familiar > 1 ? DATA.daily[n.id][state.day - 1] : n.intro))}”</p><p>${esc(n.ambition)}</p><p class="muted">${n.familiar > 2 ? "Likes " + n.favorite + ". You are becoming familiar." : "Their habits will become familiar in time."}</p>${memory}<div class="actions">${n.id === "mira" ? btn("Share the wagon lead", "choice('share','mira')", !state.knowledge.wagons || state.world.leak) : ""}${n.id === "oren" ? btn("Sell road news · 15 coins", "choice('sell','oren')", !state.knowledge.wagons || state.world.sold) + btn("Use the ledger · 25 coins", "choice('exploit','oren')", !state.knowledge.ledger || state.world.exploited) : ""}${n.id === "nell" ? btn(state.staff.hired ? "Nell is on staff" : "Hire Nell · 12 coins", "choice('hire','nell')", state.staff.hired || state.coins < 12) + btn("Ask what she heard", "choice('report','nell')", !state.staff.hired) : ""}${n.id === "cedric" && q?.resolved ? btn("Ask about the journey", "choice('debrief','cedric')", q.debriefed) : ""}${n.id === "tomas" ? (state.events.search ? btn("Cooperate with the search", "choice('cooperate','tomas')") : "") + btn("Give ledger testimony", "choice('testify','tomas')", !state.knowledge.ledger) : ""}${btn("Keep your confidence", `choice('withhold','${id}')`)}${btn("Back to the room", "close()")}</div><p class="muted">The room continues while you talk. Space pauses, including all actions.</p>`,
+    "talk",
+  );
+}
+function choice(v, id) {
+  if (state.paused) return;
+  doAct(v, id);
+  close();
+}
+function board() {
+  let q = state.quest,
+    letter = state.evidence.find((e) => e.id === "letter");
+  if (letter) doAct("inspect", "letter");
+  panel(
+    `<div class="eyebrow">The office • hands beyond the inn</div><h2>Letters & departures</h2><p>${letter ? esc(letter.text) : "A pin, a map of Rookcross, and a space where the rest of the world ought to be."}</p>${q ? `<h3>Blackwood tollhouse</h3><p>${q.resolved ? "The party is back in town. Find Cedric when he comes in." : "Cedric" + (q.bram ? " and Bram" : "") + " left on day " + q.departDay + ". They expected two days on the road."}</p>` : `<h3>Survey the Blackwood tollhouse</h3><p>Ask Cedric to find the missing wagons. He is eager, but has never led a survey. A bridge on this road may be unsafe.</p><label><input id="bram" type="checkbox" checked> Ask Bram to accompany him · 6 coins</label><label><input id="supplies" type="checkbox" checked> Rope, provisions and dry blankets · 4 coins</label><label><input id="cautious" type="checkbox" checked> Survey cautiously; come home before taking risks</label><label><input id="warning" type="checkbox" ${state.knowledge.warning ? "checked" : "disabled"}> Share Bram's ridge-route warning ${state.knowledge.warning ? "" : "(not learned)"}</label><p class="muted">Cedric's fee: 8 coins. Both selected travelers must be in the inn. Depart by day four to allow a return this week. No promised odds.</p>${btn("Agree and send them", "dispatch()", !state.knowledge.wagons || state.day > 4)}`}
+<div class="actions">${btn("Read journal", "journal()")}${btn("Back to the room", "close()")}</div>`,
+    "board",
+  );
+}
+function dispatch() {
+  if (state.paused) return;
+  let opts = {};
+  for (let id of ["bram", "supplies", "cautious", "warning"])
+    opts[id] = $(id).checked;
+  if (doAct("dispatch", null, opts)) close();
+}
+function journal(filter = "") {
+  panel(
+    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What you know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "close()")}</div>`,
+    "journal",
+  );
+  filterJournal(filter);
+}
+function filterJournal(filter) {
+  let f = filter.toLowerCase(),
+    entries = Object.values(state.knowledge).filter(
+      (k) =>
+        JSON.stringify(k).toLowerCase().includes(f) ||
+        JSON.stringify(DATA.rumors[k.id]).toLowerCase().includes(f),
+    );
+  $("entries").innerHTML =
+    entries
+      .map(
+        (k) =>
+          `<article><span class="tag">${k.status}</span><h3>${DATA.rumors[k.id].title}</h3><p>${DATA.rumors[k.id].text}</p><p class="muted">${k.observations.map((o) => `Day ${o.day} • ${esc(o.source)} • ${o.channel}`).join("<br>")}<br>Known to you: ${[...new Set(k.knownBy)].map(esc).join(", ")}</p></article>`,
+      )
+      .join("") +
+    (!entries.length
+      ? "<p>No matching notes. Begin with the people in the room.</p>"
+      : "") +
+    "<h3>People & choices</h3>" +
+    state.notes
+      .filter((n) => n.text.toLowerCase().includes(f))
+      .map((n) => `<p class="muted">Day ${n.day} — ${esc(n.text)}</p>`)
+      .join("") +
+    Object.entries(state.relationships)
+      .filter(
+        ([k, v]) =>
+          (k + v).includes(f) &&
+          k.split(":").every((id) => Sim.npc(state, id).familiar > 0),
+      )
+      .map(
+        ([k, v]) =>
+          `<p class="muted">${esc(k.replace(":", " & "))}: ${esc(v)}</p>`,
+      )
+      .join("");
+}
+function settings() {
+  panel(
+    `<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear ? "checked" : ""} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow ? "checked" : ""} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn("Save now", "state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;close()")}${btn("New week", "confirmReset()")}${btn("Back", "close()")}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,
+    "settings",
+  );
+}
+function confirmReset() {
+  panel(
+    '<h2>Begin again?</h2><p>This replaces the saved week in this browser.</p><div class="actions">' +
+      btn("Start a fresh week", "state=Sim.fresh();close();welcome()") +
+      btn("Keep this week", "close()") +
+      "</div>",
+    "settings",
+  );
+}
+function ending() {
+  panel(
+    '<div class="eyebrow">Seven days at Rookcross</div><h2>The door will open again.</h2>' +
+      Sim.summary(state)
+        .map((s) => "<p>" + esc(s) + "</p>")
+        .join("") +
+      '<div class="actions">' +
+      btn("Read your journal", "journal()") +
+      btn("Try another week", "confirmReset()") +
+      btn("Look at the room", "close()") +
+      '</div><p class="muted">End of this vertical slice. Long-term romance, town simulation and construction belong to the future game.</p>',
+    "ending",
+  );
+}
+function interact() {
+  if (state.paused || modal) return;
+  let n = Sim.nearNpc(state),
+    st = Sim.nearStation(state),
+    e = state.evidence.find((e) => Sim.dist(e, state.player) < 65);
+  if (n && state.player.carry) {
+    doAct("serve", n.id);
+    return;
+  }
+  if (e && e.id === "spill") {
+    doAct("inspect", e.id);
+    return;
+  }
+  if (st && (!n || Sim.dist(st, state.player) < Sim.dist(n, state.player))) {
+    if (st.id === "board") board();
+    else if (st.id === "bed") {
+      if (!doAct("sleep")) {
+        state.toast =
+          "Closing comes near the end of the day. There is time to listen.";
+        state.toastTime = 5;
+      }
+    } else if (st.id === "room" || st.id === "hearth") doAct("inspect", st.id);
+    return;
+  }
+  if (n) talk(n.id);
+}
+window.addEventListener("keydown", (e) => {
+  if (e.target.matches("input,select")) return;
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key))
+    e.preventDefault();
+  let k = e.key.toLowerCase();
+  if (!e.repeat) {
+    if (k === " ") {
+      if (modal !== "welcome" && !state.ended) pause();
+      return;
+    }
+    if (k === "escape") {
+      close();
+      return;
+    }
+    if (k === "j") {
+      modal === "journal" ? close() : journal();
+      return;
+    }
+    if (k === "e") interact();
+    if (k === "x" && !modal) doAct("discard");
+  }
+  keys[k] = true;
+});
+window.addEventListener("keyup", (e) => (keys[e.key.toLowerCase()] = false));
+window.addEventListener("blur", () => {
+  keys = {};
+  if (started) state.paused = true;
+  save();
+});
+canvas.addEventListener("pointerdown", (e) => {
+  if (state.paused || modal) return;
+  let r = canvas.getBoundingClientRect(),
+    p = {
+      x: ((e.clientX - r.left) * 1000) / r.width,
+      y: ((e.clientY - r.top) * 660) / r.height,
+    };
+  if (!Sim.blocked(p.x, p.y)) state.player.path = Sim.route(state.player, p);
+});
+function rect(x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x, y, w, h);
+}
+function ellipse(x, y, rx, ry, c) {
+  ctx.fillStyle = c;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+function text(t, x, y, size = 13, color = "#ddd1b5", align = "center") {
+  ctx.font = `${size}px Georgia`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.fillText(t, x, y);
+}
+function bubble(t, x, y, color = "#d9d3b7") {
+  ctx.font = "14px Georgia";
+  let w = Math.min(370, ctx.measureText(t).width + 22);
+  rect(x - w / 2, y - 22, w, 29, "#1d2b28ed");
+  text(t, x, y - 3, 14, color);
+}
+function person(n, isPlayer = false) {
+  let moving = n.path?.length,
+    walk = moving ? Math.sin(performance.now() / 95) * 3 : 0;
+  ellipse(n.x, n.y + 9, 17, 8, "#0005");
+  rect(n.x - 9, n.y + 2, 6, 10 + walk, "#282828");
+  rect(n.x + 3, n.y + 2, 6, 10 - walk, "#282828");
+  ellipse(n.x, n.y - 4, n.id === "bram" ? 16 : 12, 17, n.color);
+  ellipse(n.x, n.y - 21, 9, 10, "#d4ad80");
+  ellipse(n.x, n.y - 26, 10, 6, n.hair || "#3e3430");
+  if (n.id === "bram") ellipse(n.x, n.y - 14, 9, 9, n.hair);
+  if (n.id === "ivo") {
+    ctx.fillStyle = n.color;
+    ctx.beginPath();
+    ctx.moveTo(n.x - 13, n.y - 24);
+    ctx.lineTo(n.x + 3, n.y - 50);
+    ctx.lineTo(n.x + 13, n.y - 24);
+    ctx.fill();
+  }
+  if (n.id === "tomas") rect(n.x - 11, n.y - 28, 22, 5, "#a6b6b4");
+  if (isPlayer) {
+    ctx.strokeStyle = "#eed7a0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(n.x, n.y + 10, 21, 11, 0, 0, 7);
+    ctx.stroke();
+    rect(n.x - 7, n.y - 5, 14, 16, "#d5c4a0");
+  }
+  if (n.served || (isPlayer && n.carry)) {
+    rect(n.x + 13, n.y - 9, 8, 10, "#c4994a");
+    rect(n.x + 13, n.y - 10, 8, 3, "#efe1bc");
+  }
+  if (n.id === "cedric" && state.quest?.outcome === "injured")
+    rect(n.x - 11, n.y - 5, 21, 4, "#ded8bd");
+  text(
+    isPlayer ? state.player.name : n.name,
+    n.x,
+    n.y + 29,
+    13,
+    isPlayer ? "#ffe6ad" : "#e0d4bd",
+  );
+}
+function draw() {
+  ctx.clearRect(0, 0, 1000, 660);
+  rect(0, 0, 1000, 660, "#19282c");
+  for (let i = 0; i < 45; i++) {
+    let x = (i * 73 + performance.now() * 0.015) % 1000,
+      y = (i * 43 + performance.now() * 0.09) % 660;
+    ctx.strokeStyle = "#a6c0bf15";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 4, y + 13);
+    ctx.stroke();
+  }
+  rect(30, 30, 930, 600, "#282c28");
+  rect(44, 44, 900, 572, "#65503a");
+  for (let y = 48; y < 617; y += 23) {
+    rect(44, y, 900, 1, "#302b2580");
+    for (let x = 44 + (Math.floor(y / 23) % 2) * 54; x < 941; x += 110)
+      rect(x, y, 1, 22, "#382f2870");
+  }
+  for (let i = 0; i < 90; i++) {
+    let x = 60 + ((i * 131) % 850),
+      y = 65 + ((i * 79) % 535);
+    rect(x, y, 22, 1, "#ad885020");
+  }
+  rect(45, 45, 348, 139, "#3b453d");
+  rect(728, 49, 212, 287, "#4a463c");
+  rect(750, 180, 172, 147, "#6c5141");
+  rect(230, 325, 450, 262, "#4c3e34");
+  ctx.strokeStyle = "#89704a";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(240, 335, 430, 242);
+  for (let x = 251; x < 655; x += 23) {
+    rect(x, 340, 8, 3, "#b0985b60");
+    rect(x, 568, 8, 3, "#b0985b60");
+  }
+  for (let o of DATA.walls) {
+    rect(o.x - 3, o.y, o.w + 6, o.h + 4, "#252c27");
+    rect(o.x, o.y, o.w, o.h, "#897457");
+    rect(
+      o.x + 3,
+      o.y + 3,
+      Math.max(2, o.w - 6),
+      Math.max(2, o.h - 6),
+      "#584832",
+    );
+  }
+  for (let f of DATA.furniture) {
+    rect(f.x - 3, f.y + 6, f.w + 6, f.h, "#0004");
+    rect(f.x, f.y, f.w, f.h, "#463428");
+    rect(
+      f.x + 4,
+      f.y + 3,
+      f.w - 8,
+      f.h - 7,
+      f.type === "bed" ? "#999276" : "#977046",
+    );
+    for (let y = f.y + 11; y < f.y + f.h - 6; y += 12)
+      rect(f.x + 5, y, f.w - 10, 1, "#37291e50");
+    if (f.type === "bed") rect(f.x + 6, f.y + 7, 26, f.h - 15, "#d0c4a2");
+    if (f.type === "table") {
+      ellipse(f.x + f.w / 2, f.y + 14, 7, 5, "#ccb993");
+      rect(f.x + 20, f.y + 12, 6, 10, "#bd8f43");
+      rect(f.x + f.w - 27, f.y + 15, 6, 10, "#bd8f43");
+      for (let x of [f.x + 12, f.x + f.w - 24]) {
+        rect(x, f.y - 19, 19, 11, "#493929");
+        rect(x, f.y + f.h + 8, 19, 11, "#493929");
+      }
+    }
+  }
+  // Quiet signs of a once-beautiful working inn.
+  for (let x of [195, 687]) {
+    rect(x, 52, 10, 128, "#322e26");
+    rect(x - 4, 68, 18, 12, "#746044");
+    rect(x + 2, 54, 2, 123, "#ba946633");
+  }
+  for (let x of [330, 630]) {
+    rect(x, 44, 62, 9, "#2c3330");
+    rect(x + 5, 45, 52, 5, "#708b8870");
+  }
+  for (let p of [
+    [195, 210],
+    [685, 210],
+    [905, 375],
+    [225, 570],
+  ]) {
+    ellipse(p[0], p[1], 38, 27, "#eeb7660b");
+    rect(p[0] - 5, p[1] - 7, 10, 15, "#c8a457");
+    rect(p[0] - 2, p[1] - 4, 4, 8, "#ffe4a4");
+  }
+  for (let i = 0; i < 5; i++)
+    rect(
+      253 + i * 13,
+      77,
+      9,
+      27 - (i % 2) * 6,
+      ["#647973", "#b7955e", "#a5654e"][i % 3],
+    );
+  rect(313, 107, 26, 13, "#daca9e");
+  rect(318, 110, 15, 1, "#77654d");
+  for (let p of [
+    [356, 395],
+    [560, 395],
+    [685, 510],
+    [810, 281],
+  ]) {
+    ellipse(p[0], p[1], 8, 5, "#8f9b8633");
+    rect(p[0] - 2, p[1] - 9, 4, 10, "#e0c995");
+    ellipse(p[0], p[1] - 10, 2, 4, "#ffe3a0");
+  }
+  for (let i = 0; i < 6; i++) {
+    rect(580 + i * 15, 92, 9, 3, "#84744b");
+    rect(583 + i * 15, 95, 3, 6, "#84744b");
+  }
+  rect(190, 480, 22, 50, "#655e49");
+  for (let i = 0; i < 4; i++) rect(188, 486 + i * 10, 26, 2, "#32382d");
+  ellipse(200, 477, 13, 6, "#909177");
+  // Hearth, casks, books and the room's old structural details.
+  rect(460, 45, 104, 54, "#969083");
+  rect(470, 48, 84, 41, "#302d25");
+  for (let i = 0; i < 9; i++) {
+    let h = 15 + Math.sin(performance.now() / 220 + i * 4) * 10;
+    ellipse(480 + i * 8, 83 - h / 2, 5, h / 2, i % 2 ? "#edb458" : "#c5713f");
+  }
+  let glow = ctx.createRadialGradient(510, 88, 5, 510, 88, 180);
+  glow.addColorStop(0, "#edaf5826");
+  glow.addColorStop(1, "#edaf5800");
+  ctx.fillStyle = glow;
+  ctx.fillRect(325, 40, 370, 230);
+  for (let st of DATA.stations.filter((s) =>
+    ["ale", "wine", "tea"].includes(s.id),
+  )) {
+    ellipse(st.x, st.y, 20, 18, st.id === "tea" ? "#879087" : "#927047");
+    ctx.strokeStyle = "#342e25";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(st.x, st.y, 16, 15, 0, 0, 7);
+    ctx.stroke();
+    rect(st.x + 14, st.y - 2, 12, 5, "#c6aa6e");
+    text(st.id, st.x, st.y + 29, 11);
+  }
+  ellipse(120, 440, 23, 19, "#343d37");
+  ellipse(120, 437, 18, 12, "#b48746");
+  text("stew", 120, 472, 11);
+  rect(95, 75, 35, 53, "#9a8b6b");
+  rect(97, 78, 31, 12, "#d5c7a0");
+  rect(268, 135, 26, 21, "#e0cd9e");
+  text("OFFICE", 300, 58, 11, "#c4bd9b");
+  text("ROOM TWO", 835, 60, 11, "#c4bd9b");
+  text("PRIVATE BOOTH", 830, 320, 10, "#c4bd9b");
+  text("ROOKCROSS", 500, 647, 12, "#a8b7ad");
+  rect(445, 610, 90, 20, "#34372e");
+  text("front door", 490, 629, 11, "#a5a58a");
+  text("back door", 922, 218, 10, "#c4bd9b");
+  for (let e of state.evidence) {
+    if (e.id === "spill") {
+      ellipse(e.x, e.y, 21, 12, "#8b72a777");
+      for (let j = 0; j < 4; j++)
+        ellipse(e.x + j * 12, e.y - j * 7, 3, 2, "#987ca8");
+    } else {
+      rect(e.x - 10, e.y - 7, 20, 14, "#e9d6a7");
+    }
+  }
+  for (let n of [
+    ...state.npcs.filter((n) => n.present && Sim.line(state.player, n)),
+    { ...state.player, isPlayer: true },
+  ].sort((a, b) => a.y - b.y))
+    person(n, n.isPlayer);
+  let best = null;
+  for (let t of Sim.activeTalks(state)) {
+    let p = Sim.perceive(state, t),
+      n = Sim.npc(state, t.a),
+      h = state.heard[t.id];
+    if (p.tier === 1) {
+      text(
+        state.settings.clear ? "speaking" : "···",
+        n.x,
+        n.y - 46,
+        state.settings.clear ? 13 : 18,
+        "#e9dabc",
+      );
+    }
+    if (p.tier === 2) bubble(t.fragment, n.x, n.y - 45);
+    if (p.tier === 3) {
+      text(t.whisper ? "…" : "···", n.x, n.y - 46, 20, "#ead6a5");
+      if (!best || h?.dwell > best.dwell) best = { t, dwell: h?.dwell || 0 };
+    }
+  }
+  $("caption").style.display = best ? "block" : "none";
+  if (best)
+    $("caption").textContent =
+      best.dwell >= 3 ? best.t.line : best.t.fragment + " (linger nearby)";
+  let near = Sim.nearNpc(state),
+    st = Sim.nearStation(state);
+  let hint = state.paused
+    ? "PAUSED · inspect freely · Space to resume"
+    : state.player.carry
+      ? `Carrying ${state.player.carry} · E near a guest · X to set down`
+      : near
+        ? `E · Talk to ${near.name}`
+        : st
+          ? ["ale", "wine", "tea", "stew"].includes(st.id)
+            ? `Hold E · Prepare ${st.id}`
+            : `E · ${st.name}`
+          : "Walk close. Listen a little longer.";
+  rect(260, 5, 480, 28, "#102020d9");
+  text(hint, 500, 24, 14, "#ead7ae");
+  if (state.pour > 0) {
+    rect(state.player.x - 15, state.player.y + 36, 30, 3, "#272d28");
+    rect(
+      state.player.x - 15,
+      state.player.y + 36,
+      (30 * state.pour) / 0.65,
+      3,
+      "#e7c578",
+    );
+  }
+  let phase =
+    state.time < 35
+      ? "Morning"
+      : state.time < 110
+        ? "Afternoon"
+        : state.time < 145
+          ? "Evening"
+          : "Closing";
+  $("status").innerHTML =
+    `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><br>${DATA.dayNames[state.day - 1]} &nbsp; · &nbsp; ${state.coins} coins`;
+  $("pause").textContent = state.paused ? "Resume" : "Pause";
+  $("toast").textContent =
+    state.toastTime > 0
+      ? state.toast
+      : state.staff.hired
+        ? "Nell has the public tables. You have a little more room to listen."
+        : "A warm room. Eight lives. You cannot be everywhere.";
+  if (state.paused && modal !== "welcome") {
+    rect(45, 45, 900, 571, "#15222330");
+    text(state.ended ? "WEEK COMPLETE" : "PAUSED", 500, 312, 32, "#ffebbc");
+  }
+  if (modal) {
+    for (let b of $("panel").querySelectorAll("button")) {
+      if (/choice\(|dispatch\(/.test(b.getAttribute("onclick") || "")) {
+        if (!("originalDisabled" in b.dataset))
+          b.dataset.originalDisabled = String(b.disabled);
+        b.disabled = state.paused || b.dataset.originalDisabled === "true";
+      }
+    }
+  }
+}
+function frame(t) {
+  let dt = Math.min(0.1, (t - last) / 1000 || 0);
+  last = t;
+  let wasEnded = state.ended;
+  Sim.tick(
+    state,
+    dt,
+    modal
+      ? {}
+      : {
+          up: keys.w || keys.arrowup,
+          down: keys.s || keys.arrowdown,
+          left: keys.a || keys.arrowleft,
+          right: keys.d || keys.arrowright,
+          interact: keys.e,
+        },
+  );
+  if (state.ended && !wasEnded) ending();
+  autosave += dt;
+  if (autosave > 8) {
+    save();
+    autosave = 0;
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+welcome();
+requestAnimationFrame(frame);
 
 // Optional synthesized ambience; no downloads and no essential audio information.
-let ambienceContext=null;
-function toggleAmbience(){
- if(ambienceContext){const playing=ambienceContext.state==='running';playing?ambienceContext.suspend():ambienceContext.resume();$('sound').textContent=playing?'Sound off':'Sound on';return}
- const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
- ambienceContext=new Audio();const ac=ambienceContext,buffer=ac.createBuffer(1,ac.sampleRate*5,ac.sampleRate),data=buffer.getChannelData(0);let lastNoise=0;
- for(let i=0;i<data.length;i++){lastNoise=(lastNoise+Math.random()*.035-.0175)/1.015;data[i]=lastNoise}
- const noise=ac.createBufferSource(),filter=ac.createBiquadFilter(),gain=ac.createGain();noise.buffer=buffer;noise.loop=true;filter.type='lowpass';filter.frequency.value=950;gain.gain.value=.23;noise.connect(filter).connect(gain).connect(ac.destination);noise.start();
- for(let frequency of [146.83,220,293.66]){const tone=ac.createOscillator(),volume=ac.createGain();tone.type='sine';tone.frequency.value=frequency;volume.gain.value=.006;tone.connect(volume).connect(ac.destination);tone.start()}
- $('sound').textContent='Sound on';
+let ambienceContext = null;
+function toggleAmbience() {
+  if (ambienceContext) {
+    const playing = ambienceContext.state === "running";
+    playing ? ambienceContext.suspend() : ambienceContext.resume();
+    $("sound").textContent = playing ? "Sound off" : "Sound on";
+    return;
+  }
+  const Audio = window.AudioContext || window.webkitAudioContext;
+  if (!Audio) return;
+  ambienceContext = new Audio();
+  const ac = ambienceContext,
+    buffer = ac.createBuffer(1, ac.sampleRate * 5, ac.sampleRate),
+    data = buffer.getChannelData(0);
+  let lastNoise = 0;
+  for (let i = 0; i < data.length; i++) {
+    lastNoise = (lastNoise + Math.random() * 0.035 - 0.0175) / 1.015;
+    data[i] = lastNoise;
+  }
+  const noise = ac.createBufferSource(),
+    filter = ac.createBiquadFilter(),
+    gain = ac.createGain();
+  noise.buffer = buffer;
+  noise.loop = true;
+  filter.type = "lowpass";
+  filter.frequency.value = 950;
+  gain.gain.value = 0.23;
+  noise.connect(filter).connect(gain).connect(ac.destination);
+  noise.start();
+  for (let frequency of [146.83, 220, 293.66]) {
+    const tone = ac.createOscillator(),
+      volume = ac.createGain();
+    tone.type = "sine";
+    tone.frequency.value = frequency;
+    volume.gain.value = 0.006;
+    tone.connect(volume).connect(ac.destination);
+    tone.start();
+  }
+  $("sound").textContent = "Sound on";
 }
 </script></body></html>

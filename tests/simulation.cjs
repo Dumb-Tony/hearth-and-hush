@@ -8,10 +8,12 @@ vm.runInContext(
     fs.readFileSync("src/sim.js", "utf8") +
     "\n" +
     fs.readFileSync("src/dialogue.js", "utf8") +
-    "\nglobalThis.api={DATA,Sim,Dialogue};",
+    "\n" +
+    fs.readFileSync("src/tutorial.js", "utf8") +
+    "\nglobalThis.api={DATA,Sim,Dialogue,Guide};",
   context,
 );
-const { DATA, Sim, Dialogue } = context.api;
+const { DATA, Sim, Dialogue, Guide } = context.api;
 let count = 0;
 function test(name, fn) {
   try {
@@ -594,5 +596,52 @@ test("new sale records keeper as seller and Oren as payer", () => {
   );
   assert(!Sim.act(s, "sell", "oren"));
   assert.equal(s.coins, before + 15);
+});
+test("practice freezes the clock and keeps the real week separate", () => {
+  const original = Sim.fresh();
+  original.day = 5;
+  original.coins = 56;
+  const before = JSON.stringify(original),
+    s = Guide.create(original.player);
+  advance(s, 220);
+  assert.equal(s.day, 1);
+  assert.equal(s.time, 0);
+  assert.equal(s.coins, 24);
+  assert.equal(s.npcs.filter((n) => n.present).length, 1);
+  assert.equal(JSON.stringify(original), before);
+});
+test("all practice steps complete using real paths, service and hearing", () => {
+  const s = Guide.create(Sim.fresh().player);
+  function walk(target) {
+    s.player.path = Sim.route(s.player, target);
+    for (let i = 0; i < 300; i++) {
+      Sim.tick(s, 0.1);
+      Guide.update(s);
+    }
+    assert(Sim.dist(s.player, target) < 65);
+  }
+  function action(verb, id) {
+    assert(Sim.act(s, verb, id));
+    Guide.action(s, verb, id);
+  }
+  walk(Guide.target(s));
+  assert.equal(s.lesson, 1);
+  action("take", "tea");
+  assert.equal(s.lesson, 2);
+  action("discard");
+  assert.equal(s.lesson, 1);
+  action("take", "tea");
+  walk(Guide.target(s));
+  action("serve", "nell");
+  assert.equal(s.lesson, 3);
+  action("talk", "nell");
+  assert.equal(s.lesson, 4);
+  walk(Guide.target(s));
+  assert.equal(s.lesson, 5);
+  assert(s.knowledge.warning);
+  Guide.action(s, "journal");
+  assert.equal(s.lesson, 6);
+  assert.equal(s.time, 30);
+  assert.equal(s.day, 1);
 });
 console.log("\n" + count + " scenario regressions passed.");

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node build.js",
-    "test": "node tests/simulation.cjs",
+    "test": "node tests/simulation.cjs && node tests/onboarding.cjs",
     "start": "node serve.cjs"
   }
 }

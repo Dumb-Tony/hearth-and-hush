@@ -525,7 +525,73 @@ main {
 #panel .spoken {
   margin-bottom: 14px;
 }
-</style></head><body><header><div><small>Rookcross • a working inn</small><h1>HEARTH & HUSH</h1></div><div id="status" class="status"></div><div class="tools"><button id="pause" onclick="pause()">Pause</button><button onclick="journal()">Journal · J</button><button id="sound" onclick="toggleAmbience()">Sound off</button><button onclick="settings()">Settings</button></div></header><main><div id="stage"><canvas id="game" width="1000" height="660" aria-label="Living tavern. Use WASD or arrow keys to move and E to interact."></canvas><div id="interaction-hint" aria-live="polite"></div><div id="caption" aria-live="polite"></div><button id="touch" onclick="interact()">Interact</button></div><div id="toast" role="status"></div><footer><span><kbd>WASD</kbd> move · <kbd>E</kbd> interact / hold to pour · <kbd>Space</kbd> pause · <kbd>J</kbd> journal</span><span>Provisional codename · standalone vertical slice</span></footer></main><div id="overlay"><section id="panel" role="dialog" aria-label="Innkeeper interaction"></section></div><script>/* Stable-ID character, story and layout content. */
+#guide[hidden] {
+  display: none;
+}
+#guide {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #bba476;
+  border-radius: 12px;
+  background: #223d40;
+  padding: 12px 18px;
+  margin: 0 0 12px;
+  box-shadow: 0 5px 18px #0004;
+}
+#guide h2 {
+  font-size: 19px;
+  margin: 4px 0;
+  color: #ffe1a7;
+}
+#guide p {
+  font: 14px/1.45 system-ui;
+  margin: 0;
+  color: #e0e7d9;
+  max-width: 650px;
+}
+.guide-buttons {
+  display: grid;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.guide-buttons button {
+  font: 13px system-ui;
+}
+.guide-buttons button:last-child {
+  background: transparent;
+  border-color: transparent;
+  color: #b6c6bd;
+  font-size: 12px;
+}
+.learning main {
+  max-width: min(1260px, calc((100vh - 295px) * 1.51515 + 40px));
+}
+.learning #status {
+  font-size: 0;
+}
+.learning #status:after {
+  content: "PRACTICE · your saved week is safe";
+  font: 12px system-ui;
+  color: #e7c48a;
+}
+.learning #status > * {
+  display: none;
+}
+@media (max-width: 850px) {
+  #guide {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .guide-buttons {
+    display: flex;
+  }
+  .learning main {
+    max-width: min(1260px, calc((100vh - 355px) * 1.51515 + 40px));
+  }
+}
+</style></head><body><header><div><small>Rookcross • a working inn</small><h1>HEARTH & HUSH</h1></div><div id="status" class="status"></div><div class="tools"><button id="pause" onclick="pause()">Pause</button><button onclick="journal()">Journal · J</button><button id="sound" onclick="toggleAmbience()">Sound off</button><button onclick="tutorialHelp()">Help</button><button onclick="settings()">Settings</button></div></header><main><section id="guide" hidden aria-label="Guided practice"></section><div id="stage"><canvas id="game" width="1000" height="660" aria-label="Living tavern. Use WASD or arrow keys to move and E to interact."></canvas><div id="interaction-hint" aria-live="polite"></div><div id="caption" aria-live="polite"></div><button id="touch" onclick="interact()">Interact</button></div><div id="toast" role="status"></div><footer><span><kbd>WASD</kbd> move · <kbd>E</kbd> talk / serve / pour · <kbd>Space</kbd> pause · <kbd>J</kbd> journal</span><span>Provisional codename · standalone vertical slice</span></footer></main><div id="overlay"><section id="panel" role="dialog" aria-label="Innkeeper interaction"></section></div><script>/* Stable-ID character, story and layout content. */
 const DATA = {
   npcs: [
     {
@@ -1418,7 +1484,7 @@ const Sim = (() => {
   function tick(s, dt, input = {}) {
     if (s.paused || s.ended) return;
     dt = Math.min(dt, 0.1);
-    s.time += dt / (s.settings.slow ? 1.7 : 1);
+    if (!s.practice) s.time += dt / (s.settings.slow ? 1.7 : 1);
     s.toastTime = Math.max(0, s.toastTime - dt);
     let dx = (input.right ? 1 : 0) - (input.left ? 1 : 0),
       dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
@@ -1431,8 +1497,9 @@ const Sim = (() => {
       if (!blocked(s.player.x, s.player.y + (dy / l) * v))
         s.player.y += (dy / l) * v;
     } else move(s.player, dt, 155);
-    resolve(s);
+    if (!s.practice) resolve(s);
     for (let n of s.npcs) {
+      if (s.practice) continue;
       if (n.away) {
         if (n.present) {
           target(n, { x: 480, y: 599 });
@@ -2136,6 +2203,8 @@ const Dialogue = {
     return options;
   },
   line(s, n) {
+    if (s.practice && n.id === "nell")
+      return "Thank you for the tea. Bram and Cedric are talking nearby. Go over and listen; Bram knows these roads well.";
     if (n.id === "mira" && s.world.leak)
       return "I asked my contacts about those wagons. I told them what you told me. I thought they could help.";
     if (n.id === "oren" && s.world.exploited)
@@ -2793,6 +2862,201 @@ const TavernArt = (() => {
   return { room, person };
 })();
 
+// A disposable rehearsal uses the real movement, service and hearing rules.
+const Guide = {
+  create(player) {
+    const s = Sim.fresh();
+    s.practice = true;
+    s.lesson = 0;
+    Object.assign(s.player, {
+      name: player.name,
+      color: player.color,
+      x: 230,
+      y: 300,
+    });
+    for (const n of s.npcs) {
+      n.present = n.id === "nell";
+      n.path = [];
+      n.away = false;
+    }
+    return s;
+  },
+  target(s) {
+    if (s.lesson < 2) return DATA.stations.find((x) => x.id === "tea");
+    if (s.lesson < 4) return Sim.npc(s, "nell");
+    if (s.lesson === 4) return Sim.npc(s, "bram");
+    return null;
+  },
+  update(s) {
+    if (!s.practice) return;
+    if (s.lesson === 0 && Sim.nearStation(s)?.id === "tea") s.lesson = 1;
+    if (s.lesson === 1 && s.player.carry === "tea") s.lesson = 2;
+    if (s.lesson === 2 && !s.player.carry && !Sim.npc(s, "nell").served)
+      s.lesson = 1;
+    if (s.lesson === 4 && s.knowledge.warning) s.lesson = 5;
+  },
+  action(s, verb, id) {
+    if (!s.practice) return;
+    if (s.lesson === 2 && verb === "serve" && id === "nell") s.lesson = 3;
+    else if (s.lesson === 3 && verb === "talk" && id === "nell") {
+      s.lesson = 4;
+      s.time = 30;
+      for (const [id, x] of [
+        ["bram", 340],
+        ["cedric", 405],
+      ]) {
+        Object.assign(Sim.npc(s, id), { present: true, x, y: 485, path: [] });
+      }
+    } else if (s.lesson === 5 && verb === "journal") s.lesson = 6;
+    Guide.update(s);
+  },
+  copy: [
+    [
+      "Walk to the tea kettle",
+      "Click the glowing ring by the kettle, or use WASD / arrow keys. I am the character named Keeper (or the name I chose).",
+    ],
+    [
+      "Pour a cup of tea",
+      "Press E once, or click Pour tea below. I can carry one drink at a time.",
+    ],
+    [
+      "Bring the tea to Nell",
+      "Walk to Nell’s glowing ring, then press E to serve her. Serving drinks earns coins.",
+    ],
+    [
+      "Say hello to Nell",
+      "Now my hands are empty. Press E beside Nell to talk. Read her words, then choose End conversation.",
+    ],
+    [
+      "Listen to Bram and Cedric",
+      "End the conversation with Nell. Walk to Bram’s ring and stay nearby for a few seconds. No button needed. Their words appear at the bottom of the room.",
+    ],
+    [
+      "Find the note I just learned",
+      "Open Journal (or press J). The bridge warning is recorded with its source. I do not need to memorize every conversation.",
+    ],
+    [
+      "Ready to run the inn",
+      "Serve drinks for coins. Talk and listen for information. Decide whom to trust. Space pauses the room whenever I need a moment.",
+    ],
+  ],
+};
+let tutorialSave = null,
+  guideMarkup = "";
+function startPractice() {
+  if (tutorialSave) return;
+  save();
+  tutorialSave = state;
+  state = Guide.create(state.player);
+  started = true;
+  closePanel();
+  document.body.classList.add("learning");
+  guideMarkup = "";
+}
+function finishPractice() {
+  if (!tutorialSave) return;
+  state = tutorialSave;
+  tutorialSave = null;
+  state.paused = false;
+  closePanel();
+  document.body.classList.remove("learning");
+  $("guide").hidden = true;
+  state.toast =
+    "Start with one guest: walk close and press E. Help is always available above.";
+  state.toastTime = 12;
+  save();
+  if (state.ended) {
+    state.paused = true;
+    ending();
+  }
+}
+function tutorialHelp() {
+  if (modal === "welcome") return;
+  panel(
+    '<div class="eyebrow">How to play</div><h2>Run the inn. Get to know its guests.</h2><p>Serve drinks to earn coins. Talk to guests and stand near conversations to learn things. Your journal keeps the notes. Later, you can pay adventurers to investigate outside the inn.</p><p><b>Start small:</b> choose one guest. Walk close and press E. You do not need to catch every conversation.</p><p>Click the floor to walk. E interacts. J opens notes. Space pauses. Press E once at a cask or kettle to prepare a drink.</p><div class="actions">' +
+      btn(
+        tutorialSave ? "Return to practice" : "Practice the basics",
+        tutorialSave ? "closePanel()" : "startPractice()",
+      ) +
+      btn("Back to the inn", "closePanel()") +
+      '</div><p class="muted">Practice waits for you and leaves your saved week unchanged.</p>',
+    "help",
+  );
+}
+function guideAction() {
+  if (state.paused || modal) return;
+  if (state.lesson === 6) {
+    finishPractice();
+    return;
+  }
+  if (state.lesson === 5) {
+    journal();
+    return;
+  }
+  const target = Guide.target(state);
+  if (
+    target &&
+    (Sim.dist(state.player, target) > 55 || !Sim.line(state.player, target))
+  )
+    state.player.path = Sim.route(state.player, target);
+  else if (state.lesson !== 4) interact();
+}
+function drawGuide() {
+  if (!state.practice) {
+    $("guide").hidden = true;
+    return;
+  }
+  Guide.update(state);
+  const step = state.lesson,
+    p = Guide.target(state),
+    [title, detail] = Guide.copy[step];
+  const near = p && Sim.dist(state.player, p) < 55 && Sim.line(state.player, p);
+  const label =
+    step === 6
+      ? "Return to my game"
+      : step === 5
+        ? "Open journal"
+        : !near
+          ? "Walk to the marker"
+          : step === 1
+            ? "Pour tea"
+            : step === 2
+              ? "Serve Nell"
+              : step === 3
+                ? "Talk to Nell"
+                : "Listening…";
+  const html =
+    '<div><span class="eyebrow">Practice · ' +
+    Math.min(step + 1, 6) +
+    " / 6 · the clock waits</span><h2>" +
+    title +
+    "</h2><p>" +
+    detail +
+    '</p></div><div class="guide-buttons">' +
+    btn(
+      label,
+      "guideAction()",
+      state.paused || !!modal || (step === 4 && near),
+    ) +
+    btn("Leave practice", "finishPractice()") +
+    "</div>";
+  $("guide").hidden = false;
+  if (html !== guideMarkup) {
+    $("guide").innerHTML = html;
+    guideMarkup = html;
+  }
+  if (p) {
+    ctx.save();
+    ctx.strokeStyle = "#ffe39d";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([7, 5]);
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 12, 29, 14, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 const canvas = document.getElementById("game"),
   ctx = canvas.getContext("2d"),
   $ = (id) => document.getElementById(id);
@@ -2816,7 +3080,10 @@ const esc = (s) =>
   );
 function save() {
   try {
-    localStorage.setItem("hearth-hush-v1", JSON.stringify(state));
+    localStorage.setItem(
+      "hearth-hush-v1",
+      JSON.stringify(tutorialSave || state),
+    );
     return true;
   } catch {
     return false;
@@ -2847,18 +3114,19 @@ function doAct(verb, id, opts) {
     state.toast = "That needs the right person, place, time, or enough coins.";
     state.toastTime = 4;
   }
+  if (ok) Guide.action(state, verb, id);
   save();
   return ok;
 }
 function welcome() {
   state.paused = true;
   panel(
-    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Listen and decide</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
+    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>Welcome to your inn.</h2><p>I run a small inn. I earn coins by serving drinks, learn about my guests by talking and listening, and choose what to do with the information.</p><p><b>New here?</b> Try a short guided practice. One task at a time, with no ticking clock. My saved game stays safe.</p><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn("Learn the basics", "startGame(true)")}${btn(state.time || state.day > 1 ? "Continue my game" : "Skip practice and start", "startGame()")}</div>`,
     "welcome",
   );
   $("coat").value = state.player.color;
 }
-function startGame() {
+function startGame(learn = false) {
   state.player.name = $("keeperName").value.trim() || "Keeper";
   state.player.color = $("coat").value;
   state.paused = false;
@@ -2869,6 +3137,7 @@ function startGame() {
     ending();
   }
   save();
+  if (learn) startPractice();
 }
 function talk(id) {
   if (!doAct("talk", id)) return;
@@ -2877,7 +3146,7 @@ function talk(id) {
     .slice(-3)
     .map((t) => "<li>" + esc(t) + "</li>")
     .join("");
-  const options = Dialogue.choices(state, n)
+  const options = (state.practice ? [] : Dialogue.choices(state, n))
     .map(
       (o) =>
         '<div class="decision">' +
@@ -2896,7 +3165,7 @@ function talk(id) {
       esc(n.name) +
       ' says</div><p class="spoken">“' +
       esc(Dialogue.line(state, n)) +
-      '”</p><details open class="person-notes"><summary>My notes about ' +
+      '”</p><details class="person-notes"><summary>My notes about ' +
       esc(n.name) +
       "</summary><p>" +
       esc(Dialogue.personalNote(n)) +
@@ -2909,7 +3178,7 @@ function talk(id) {
       options +
       '</div><div class="actions">' +
       btn("End conversation", "closePanel()") +
-      '</div><p class="muted">The inn stays busy while you talk. Press Space to pause and think. Ending this conversation does not share or refuse anything.</p>',
+      '</div><p class="muted">The room waits while I read. Ending this conversation does not share or refuse anything.</p>',
     "talk",
   );
   const pc = $("portrait").getContext("2d");
@@ -2946,8 +3215,10 @@ function dispatch() {
   if (doAct("dispatch", null, opts)) closePanel();
 }
 function journal(filter = "") {
+  if (modal === "welcome") return;
+  Guide.action(state, "journal");
   panel(
-    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What I know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}</div>`,
+    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What I know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}${state.practice && state.lesson === 6 ? btn("Finish practice", "finishPractice()") : ""}</div>`,
     "journal",
   );
   filterJournal(filter);
@@ -2987,6 +3258,11 @@ function filterJournal(filter) {
       .join("");
 }
 function settings() {
+  if (modal === "welcome") return;
+  if (state.practice) {
+    tutorialHelp();
+    return;
+  }
   panel(
     `<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear ? "checked" : ""} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow ? "checked" : ""} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn("Save now", "state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;closePanel()")}${btn("New week", "confirmReset()")}${btn("Back", "closePanel()")}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,
     "settings",
@@ -3029,7 +3305,8 @@ function interact() {
     return;
   }
   if (st && (!n || Sim.dist(st, state.player) < Sim.dist(n, state.player))) {
-    if (st.id === "board") board();
+    if (["ale", "wine", "tea", "stew"].includes(st.id)) doAct("take", st.id);
+    else if (st.id === "board") board();
     else if (st.id === "bed") {
       if (!doAct("sleep")) {
         state.toast =
@@ -3043,6 +3320,7 @@ function interact() {
 }
 window.addEventListener("keydown", (e) => {
   if (e.target.matches("input,select")) return;
+  if (modal === "welcome") return;
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key))
     e.preventDefault();
   let k = e.key.toLowerCase();
@@ -3188,10 +3466,15 @@ function draw() {
         ? `E · Talk to ${near.name}`
         : st
           ? ["ale", "wine", "tea", "stew"].includes(st.id)
-            ? `Hold E · Prepare ${st.id}`
+            ? `E · Prepare ${st.id}`
             : `E · ${st.name}`
-          : "Walk close. Listen a little longer.";
-  $("interaction-hint").textContent = hint;
+          : !state.knowledge.wagons
+            ? "Start with one guest · walk close, then press E"
+            : !state.quest && state.day <= 4
+              ? "Missing wagons · visit the office board to plan a trip"
+              : "Talk to a guest, serve a drink, or check my journal";
+  $("interaction-hint").textContent =
+    state.practice && !state.paused ? Guide.copy[state.lesson][0] : hint;
   if (state.pour > 0) {
     rect(state.player.x - 15, state.player.y + 36, 30, 3, "#272d28");
     rect(
@@ -3213,12 +3496,14 @@ function draw() {
   $("status").innerHTML =
     `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><div class="day-track" aria-hidden="true"><i style="width:${(100 * state.time) / 180}%"></i></div><span>${DATA.dayNames[state.day - 1]}</span> <strong class="coin-count">${state.coins} coins</strong>`;
   $("pause").textContent = state.paused ? "Resume" : "Pause";
-  $("toast").textContent =
-    state.toastTime > 0
+  $("toast").textContent = state.practice
+    ? "Practice only. My saved coins, guests and story stay unchanged."
+    : state.toastTime > 0
       ? state.toast
       : state.staff.hired
         ? "Nell has the public tables. You have a little more room to listen."
         : "A warm room. Eight lives. You cannot be everywhere.";
+  drawGuide();
   if (state.paused && modal !== "welcome") {
     rect(45, 45, 900, 571, "#15222330");
     text(state.ended ? "WEEK COMPLETE" : "PAUSED", 500, 312, 32, "#ffebbc");
@@ -3237,19 +3522,20 @@ function frame(t) {
   let dt = Math.min(0.1, (t - last) / 1000 || 0);
   last = t;
   let wasEnded = state.ended;
-  Sim.tick(
-    state,
-    dt,
-    modal
-      ? {}
-      : {
-          up: keys.w || keys.arrowup,
-          down: keys.s || keys.arrowdown,
-          left: keys.a || keys.arrowleft,
-          right: keys.d || keys.arrowright,
-          interact: keys.e,
-        },
-  );
+  if (!modal)
+    Sim.tick(
+      state,
+      dt,
+      modal
+        ? {}
+        : {
+            up: keys.w || keys.arrowup,
+            down: keys.s || keys.arrowdown,
+            left: keys.a || keys.arrowleft,
+            right: keys.d || keys.arrowright,
+            interact: keys.e,
+          },
+    );
   if (state.ended && !wasEnded) ending();
   autosave += dt;
   if (autosave > 8) {

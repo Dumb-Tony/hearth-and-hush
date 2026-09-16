@@ -387,7 +387,7 @@ const Sim = (() => {
   function tick(s, dt, input = {}) {
     if (s.paused || s.ended) return;
     dt = Math.min(dt, 0.1);
-    s.time += dt / (s.settings.slow ? 1.7 : 1);
+    if (!s.practice) s.time += dt / (s.settings.slow ? 1.7 : 1);
     s.toastTime = Math.max(0, s.toastTime - dt);
     let dx = (input.right ? 1 : 0) - (input.left ? 1 : 0),
       dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
@@ -400,8 +400,9 @@ const Sim = (() => {
       if (!blocked(s.player.x, s.player.y + (dy / l) * v))
         s.player.y += (dy / l) * v;
     } else move(s.player, dt, 155);
-    resolve(s);
+    if (!s.practice) resolve(s);
     for (let n of s.npcs) {
+      if (s.practice) continue;
       if (n.away) {
         if (n.present) {
           target(n, { x: 480, y: 599 });

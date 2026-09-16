@@ -96,6 +96,8 @@ const Dialogue = {
     return options;
   },
   line(s, n) {
+    if (s.practice && n.id === "nell")
+      return "Thank you for the tea. Bram and Cedric are talking nearby. Go over and listen; Bram knows these roads well.";
     if (n.id === "mira" && s.world.leak)
       return "I asked my contacts about those wagons. I told them what you told me. I thought they could help.";
     if (n.id === "oren" && s.world.exploited)

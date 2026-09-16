@@ -21,7 +21,10 @@ const esc = (s) =>
   );
 function save() {
   try {
-    localStorage.setItem("hearth-hush-v1", JSON.stringify(state));
+    localStorage.setItem(
+      "hearth-hush-v1",
+      JSON.stringify(tutorialSave || state),
+    );
     return true;
   } catch {
     return false;
@@ -52,18 +55,19 @@ function doAct(verb, id, opts) {
     state.toast = "That needs the right person, place, time, or enough coins.";
     state.toastTime = 4;
   }
+  if (ok) Guide.action(state, verb, id);
   save();
   return ok;
 }
 function welcome() {
   state.paused = true;
   panel(
-    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>The world goes out.<br>You stay behind.</h2><p>Your aunt left you a shabby inn at Rookcross, a little money, and a ledger full of names. Start with a drink. Stay close when someone lowers their voice.</p><div class="grid"><div><h3>Be present</h3><p><kbd>WASD</kbd> / arrows to walk, or click the floor. <kbd>E</kbd> to talk or interact. Hold E by a cask to pour; carry it to a guest.</p></div><div><h3>Listen and decide</h3><p>Nearby fragments become full conversations if you linger. Walls and whispers matter. <kbd>Space</kbd> pauses for thought; <kbd>J</kbd> opens your journal.</p></div></div><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn(state.time || state.day > 1 ? "Return to the inn" : "Unlock the door", "startGame()")}</div>`,
+    `<div class="eyebrow">A seven-day innkeeper story • playable prototype</div><h2>Welcome to your inn.</h2><p>I run a small inn. I earn coins by serving drinks, learn about my guests by talking and listening, and choose what to do with the information.</p><p><b>New here?</b> Try a short guided practice. One task at a time, with no ticking clock. My saved game stays safe.</p><label>Your name<input id="keeperName" type="text" maxlength="24" value="${esc(state.player.name)}"></label><label>Coat <select id="coat"><option value="#d6ab5f">Ochre</option><option value="#7caaa0">River green</option><option value="#b68c9d">Heather</option></select></label><p class="muted">About 21 minutes. Autosaves on this browser. Quiet moments can pass unnoticed; important stories have more than one trail. No service timers. Desktop recommended.</p><div class="actions">${btn("Learn the basics", "startGame(true)")}${btn(state.time || state.day > 1 ? "Continue my game" : "Skip practice and start", "startGame()")}</div>`,
     "welcome",
   );
   $("coat").value = state.player.color;
 }
-function startGame() {
+function startGame(learn = false) {
   state.player.name = $("keeperName").value.trim() || "Keeper";
   state.player.color = $("coat").value;
   state.paused = false;
@@ -74,6 +78,7 @@ function startGame() {
     ending();
   }
   save();
+  if (learn) startPractice();
 }
 function talk(id) {
   if (!doAct("talk", id)) return;
@@ -82,7 +87,7 @@ function talk(id) {
     .slice(-3)
     .map((t) => "<li>" + esc(t) + "</li>")
     .join("");
-  const options = Dialogue.choices(state, n)
+  const options = (state.practice ? [] : Dialogue.choices(state, n))
     .map(
       (o) =>
         '<div class="decision">' +
@@ -101,7 +106,7 @@ function talk(id) {
       esc(n.name) +
       ' says</div><p class="spoken">“' +
       esc(Dialogue.line(state, n)) +
-      '”</p><details open class="person-notes"><summary>My notes about ' +
+      '”</p><details class="person-notes"><summary>My notes about ' +
       esc(n.name) +
       "</summary><p>" +
       esc(Dialogue.personalNote(n)) +
@@ -114,7 +119,7 @@ function talk(id) {
       options +
       '</div><div class="actions">' +
       btn("End conversation", "closePanel()") +
-      '</div><p class="muted">The inn stays busy while you talk. Press Space to pause and think. Ending this conversation does not share or refuse anything.</p>',
+      '</div><p class="muted">The room waits while I read. Ending this conversation does not share or refuse anything.</p>',
     "talk",
   );
   const pc = $("portrait").getContext("2d");
@@ -151,8 +156,10 @@ function dispatch() {
   if (doAct("dispatch", null, opts)) closePanel();
 }
 function journal(filter = "") {
+  if (modal === "welcome") return;
+  Guide.action(state, "journal");
   panel(
-    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What I know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}</div>`,
+    `<div class="eyebrow">${esc(state.player.name)}'s journal • inspection only</div><h2>What I know</h2><input id="search" type="text" placeholder="Search people, sources, rumors…" value="${esc(filter)}" oninput="filterJournal(this.value)"><div id="entries"></div><div class="actions">${btn("Back to the room", "closePanel()")}${state.practice && state.lesson === 6 ? btn("Finish practice", "finishPractice()") : ""}</div>`,
     "journal",
   );
   filterJournal(filter);
@@ -192,6 +199,11 @@ function filterJournal(filter) {
       .join("");
 }
 function settings() {
+  if (modal === "welcome") return;
+  if (state.practice) {
+    tutorialHelp();
+    return;
+  }
   panel(
     `<div class="eyebrow">Comfort & access</div><h2>Make yourself at home</h2><label><input type="checkbox" ${state.settings.clear ? "checked" : ""} onchange="state.settings.clear=this.checked"> Clearer conversation cues and a little more hearing range</label><label><input type="checkbox" ${state.settings.slow ? "checked" : ""} onchange="state.settings.slow=this.checked"> Longer days (the keeper still walks at the same pace)</label><div class="actions">${btn("Save now", "state.toast=save()?'Saved on this browser.':'Browser storage is unavailable.';state.toastTime=5;closePanel()")}${btn("New week", "confirmReset()")}${btn("Back", "closePanel()")}</div><p class="muted">Pause freely with Space. No actions can be issued while paused. This prototype contains no essential audio cues.</p>`,
     "settings",
@@ -234,7 +246,8 @@ function interact() {
     return;
   }
   if (st && (!n || Sim.dist(st, state.player) < Sim.dist(n, state.player))) {
-    if (st.id === "board") board();
+    if (["ale", "wine", "tea", "stew"].includes(st.id)) doAct("take", st.id);
+    else if (st.id === "board") board();
     else if (st.id === "bed") {
       if (!doAct("sleep")) {
         state.toast =
@@ -248,6 +261,7 @@ function interact() {
 }
 window.addEventListener("keydown", (e) => {
   if (e.target.matches("input,select")) return;
+  if (modal === "welcome") return;
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key))
     e.preventDefault();
   let k = e.key.toLowerCase();
@@ -393,10 +407,15 @@ function draw() {
         ? `E · Talk to ${near.name}`
         : st
           ? ["ale", "wine", "tea", "stew"].includes(st.id)
-            ? `Hold E · Prepare ${st.id}`
+            ? `E · Prepare ${st.id}`
             : `E · ${st.name}`
-          : "Walk close. Listen a little longer.";
-  $("interaction-hint").textContent = hint;
+          : !state.knowledge.wagons
+            ? "Start with one guest · walk close, then press E"
+            : !state.quest && state.day <= 4
+              ? "Missing wagons · visit the office board to plan a trip"
+              : "Talk to a guest, serve a drink, or check my journal";
+  $("interaction-hint").textContent =
+    state.practice && !state.paused ? Guide.copy[state.lesson][0] : hint;
   if (state.pour > 0) {
     rect(state.player.x - 15, state.player.y + 36, 30, 3, "#272d28");
     rect(
@@ -418,12 +437,14 @@ function draw() {
   $("status").innerHTML =
     `<span class="eyebrow">Day ${state.day} / 7 · ${phase}</span><div class="day-track" aria-hidden="true"><i style="width:${(100 * state.time) / 180}%"></i></div><span>${DATA.dayNames[state.day - 1]}</span> <strong class="coin-count">${state.coins} coins</strong>`;
   $("pause").textContent = state.paused ? "Resume" : "Pause";
-  $("toast").textContent =
-    state.toastTime > 0
+  $("toast").textContent = state.practice
+    ? "Practice only. My saved coins, guests and story stay unchanged."
+    : state.toastTime > 0
       ? state.toast
       : state.staff.hired
         ? "Nell has the public tables. You have a little more room to listen."
         : "A warm room. Eight lives. You cannot be everywhere.";
+  drawGuide();
   if (state.paused && modal !== "welcome") {
     rect(45, 45, 900, 571, "#15222330");
     text(state.ended ? "WEEK COMPLETE" : "PAUSED", 500, 312, 32, "#ffebbc");
@@ -442,19 +463,20 @@ function frame(t) {
   let dt = Math.min(0.1, (t - last) / 1000 || 0);
   last = t;
   let wasEnded = state.ended;
-  Sim.tick(
-    state,
-    dt,
-    modal
-      ? {}
-      : {
-          up: keys.w || keys.arrowup,
-          down: keys.s || keys.arrowdown,
-          left: keys.a || keys.arrowleft,
-          right: keys.d || keys.arrowright,
-          interact: keys.e,
-        },
-  );
+  if (!modal)
+    Sim.tick(
+      state,
+      dt,
+      modal
+        ? {}
+        : {
+            up: keys.w || keys.arrowup,
+            down: keys.s || keys.arrowdown,
+            left: keys.a || keys.arrowleft,
+            right: keys.d || keys.arrowright,
+            interact: keys.e,
+          },
+    );
   if (state.ended && !wasEnded) ending();
   autosave += dt;
   if (autosave > 8) {

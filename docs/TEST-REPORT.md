@@ -76,3 +76,9 @@ Eight additional scenario regressions verify safe retreat under cautious instruc
 
 The actual browser loaded a pre-refinement day-four save without losing progress. The journal omitted unseen relationships, its return button closed normally, and choosing River green then reloading preserved that coat selection. These were browser UI checks; the new expedition branches were exercised through the simulation, not a complete wall-clock browser replay. No movement geometry changed in this pass.
 
+
+## Beginner tutorial — September 16
+
+All 40 scenario regressions pass. New tests cover a practice session longer than a normal day without clock, wage or arrival changes; all six steps using real routes, service and hearing; recovery after putting down a drink; and isolation from an existing week.
+
+The complete tutorial was also played through in the browser: follow the kettle marker, tap E to pour, walk to Nell and serve, talk and close the conversation, walk to Bram and Cedric, linger until the bridge warning is learned, open the journal, and finish practice. The prior day-five game returned. This is an agent-driven input playtest, not an independent human first-impression test. Help replay was confirmed in the browser. A later browser-tool stall prevented completing the extra early-exit/reload UI check. A separate view integration test verifies that practice autosave writes the original week, early exit restores its coins and knowledge, and reading panels freeze time until closed.

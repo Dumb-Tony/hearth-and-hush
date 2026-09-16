@@ -525,3 +525,69 @@ main {
 #panel .spoken {
   margin-bottom: 14px;
 }
+#guide[hidden] {
+  display: none;
+}
+#guide {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #bba476;
+  border-radius: 12px;
+  background: #223d40;
+  padding: 12px 18px;
+  margin: 0 0 12px;
+  box-shadow: 0 5px 18px #0004;
+}
+#guide h2 {
+  font-size: 19px;
+  margin: 4px 0;
+  color: #ffe1a7;
+}
+#guide p {
+  font: 14px/1.45 system-ui;
+  margin: 0;
+  color: #e0e7d9;
+  max-width: 650px;
+}
+.guide-buttons {
+  display: grid;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.guide-buttons button {
+  font: 13px system-ui;
+}
+.guide-buttons button:last-child {
+  background: transparent;
+  border-color: transparent;
+  color: #b6c6bd;
+  font-size: 12px;
+}
+.learning main {
+  max-width: min(1260px, calc((100vh - 295px) * 1.51515 + 40px));
+}
+.learning #status {
+  font-size: 0;
+}
+.learning #status:after {
+  content: "PRACTICE · your saved week is safe";
+  font: 12px system-ui;
+  color: #e7c48a;
+}
+.learning #status > * {
+  display: none;
+}
+@media (max-width: 850px) {
+  #guide {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .guide-buttons {
+    display: flex;
+  }
+  .learning main {
+    max-width: min(1260px, calc((100vh - 355px) * 1.51515 + 40px));
+  }
+}

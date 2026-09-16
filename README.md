@@ -53,3 +53,7 @@ Nearby overlapping speech now teaches only the conversation actually displayed. 
 Dialogue now names the information being shared or refused, with explanations beneath consequential choices and a neutral conversation exit. Character introductions and all seven days of ambient replies use clearer, concrete language. The tavern has a shaded storybook treatment: timber and stone, raised furniture, warm lighting, expressive faces and matching portraits. The scene remains 2D and preserves the existing movement layout.
 
 Keeper notes and memories use first-person narration, with named recipients and explicit payment direction. Existing saves migrate the earlier NPC-voiced memories. Dialogue is labeled by speaker and separated from “My notes” and “What I did.” Readable nameplates, a larger interaction cue, a day-progress indicator, window light and woven rug details improve the presentation.
+
+## Learning the game
+
+Choose **Learn the basics** on the opening screen for six guided practice steps. Glowing targets and optional action buttons show one task at a time. Practice does not spend saved money, advance the week or alter story knowledge. Reopen it through **Help → Practice the basics**. Tap E once to pour, serve or talk. The room waits while panels are open, and extra character notes begin folded away.
